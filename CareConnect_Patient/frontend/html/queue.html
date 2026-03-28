@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Queue - CareConnect</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <h1 class="mb-4">Track Queue Status</h1>
+
+            <div class="form-group" style="max-width: 400px;">
+                <label class="form-label">Select Doctor to Check Queue</label>
+                <select id="doctorSelectQueue" class="form-control" onchange="checkQueue()">
+                    <option value="">Choose a Doctor...</option>
+                </select>
+            </div>
+
+            <div id="queueResult" class="grid-2 mt-4" style="display: none;">
+                <div class="glass-panel card text-center p-0" style="padding: 2rem;">
+                    <h3 class="text-muted">Total in Queue</h3>
+                    <h1 style="font-size: 3rem; color: var(--primary);" id="totalQueue">0</h1>
+                </div>
+                <div class="glass-panel card text-center p-0" style="padding: 2rem;">
+                    <h3 class="text-muted">Currently Serving Token</h3>
+                    <h1 style="font-size: 3rem; color: var(--success);" id="servingToken">-</h1>
+                </div>
+            </div>
+            <p id="queueMsg" class="mt-4 text-center"></p>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('queue');
+
+        async function loadDoctors() {
+            try {
+                const doctors = await api.getDoctors();
+                const select = document.getElementById('doctorSelectQueue');
+                select.innerHTML += doctors.map(d => `<option value="${d.doctor_id}">Dr. ${d.name} (${d.specialization})</option>`).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        async function checkQueue() {
+            const docId = document.getElementById('doctorSelectQueue').value;
+            const resDiv = document.getElementById('queueResult');
+            const msg = document.getElementById('queueMsg');
+            
+            if (!docId) {
+                resDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const res = await api.getQueueStatus(docId);
+                resDiv.style.display = 'grid';
+                msg.innerHTML = '';
+                
+                document.getElementById('totalQueue').innerText = res.queue_position !== null ? `You are #${res.queue_position}` : 'Not in Queue';
+                document.getElementById('servingToken').innerText = res.current_serving_token !== 'None' ? `#${res.current_serving_token}` : 'Waiting';
+
+                if (res.patients_ahead !== null) {
+                    msg.innerHTML = `<div class="glass-panel card mt-4 text-center" style="border: 1px solid var(--primary-light); background: var(--bg-color);">
+                        <p style="font-size: 1.2rem; color: var(--text-main);">
+                            <i class="fa-solid fa-hourglass-half text-primary"></i> 
+                            Estimated Wait: <strong>${res.estimated_wait_time_mins} mins</strong>
+                        </p>
+                        <p class="text-muted mt-1">${res.patients_ahead} people are currently ahead of you.</p>
+                    </div>`;
+                }
+            } catch (err) {
+                resDiv.style.display = 'none';
+                msg.className = 'mt-4 text-center text-danger';
+                msg.innerText = 'Failed to load queue status.';
+            }
+        }
+
+        loadDoctors();
+    </script>
+</body>
+</html>

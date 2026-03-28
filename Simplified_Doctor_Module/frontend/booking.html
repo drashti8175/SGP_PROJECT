@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Appointment - MediCore</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 2rem;">Book Your Appointment</h1>
+        
+        <div class="card">
+            <h3 class="mb-2">1. Select Your Doctor</h3>
+            <div class="doctor-grid" id="doctorList">
+                <!-- Doctors injected here -->
+            </div>
+
+            <div id="bookingForm" style="display:none;">
+                <h3 class="mb-2">2. Patient Details</h3>
+                <form id="bookForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Book Now</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="successCard" class="card" style="display:none; text-align:center; border-color:var(--secondary); background: rgba(16, 185, 129, 0.05);">
+            <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+            <h2 id="successMsg">Booking Successful!</h2>
+            <p id="tokenDisplay" style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0; color: var(--primary);"></p>
+            <button onclick="window.location.reload()" class="btn btn-primary" style="width: auto; display: inline-block;">Book Another</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedDoctorId = null;
+
+        async function loadDoctors() {
+            const res = await fetch('http://localhost:5000/api/doctors');
+            const doctors = await res.json();
+            const list = document.getElementById('doctorList');
+            list.innerHTML = doctors.map(d => `
+                <div class="card doctor-card" onclick="selectDoctor(this, '${d._id}')">
+                    <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-solid fa-user-doctor"></i></div>
+                    <h3>${d.name}</h3>
+                    <p class="text-muted">${d.specialization}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectDoctor(el, id) {
+            document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedDoctorId = id;
+            document.getElementById('bookingForm').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        document.getElementById('bookForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                date: document.getElementById('date').value,
+                doctorId: selectedDoctorId
+            };
+
+            const res = await fetch('http://localhost:5000/api/patient/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById('bookingForm').style.display = 'none';
+                document.getElementById('doctorList').style.display = 'none';
+                document.getElementById('successCard').style.display = 'block';
+                document.getElementById('successMsg').innerText = `Thank you, ${data.patientName}!`;
+                document.getElementById('tokenDisplay').innerText = `Your Token Number: ${data.token}`;
+            }
+        };
+
+        loadDoctors();
+        // Set min date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+    </script>
+</body>
+</html>

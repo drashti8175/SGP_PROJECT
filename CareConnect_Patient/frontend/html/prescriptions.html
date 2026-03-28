@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Prescriptions - CareConnect</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <h1 class="mb-4">My Prescriptions</h1>
+
+            <div id="rxContainer" class="grid-2">
+                <!-- Prescriptions will load here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('prescriptions');
+
+        async function loadPrescriptions() {
+            try {
+                const rx = await api.getPrescriptions(patientId);
+                const container = document.getElementById('rxContainer');
+                
+                if (rx.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No prescriptions found.</p>';
+                    return;
+                }
+                
+                container.innerHTML = rx.map(p => `
+                    <div class="glass-panel card">
+                        <div class="flex-between mb-2">
+                            <h3 style="color: var(--primary);">Dr. ${p.doctor_name}</h3>
+                            <span class="text-muted" style="font-size: 0.9rem;">${new Date(p.created_at || p.date).toLocaleDateString()}</span>
+                        </div>
+                        <div class="mt-2">
+                           <p><strong>Medical Advice / Prescription:</strong></p>
+                           <p class="text-muted" style="white-space: pre-line; margin-top: 5px;">${p.details || 'No details provided'}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                document.getElementById('rxContainer').innerHTML = '<p class="text-danger">Failed to load prescriptions.</p>';
+            }
+        }
+
+        loadPrescriptions();
+    </script>
+</body>
+</html>

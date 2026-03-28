@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard - MediCore</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card-header">
+            <div>
+                <h1>Welcome, <span id="docName" style="color:var(--primary);">Doctor</span></h1>
+                <p class="text-muted" id="currentDate">Today's Live Queue</p>
+            </div>
+            <button onclick="logout()" class="btn btn-primary" style="width:auto; background:white; color:var(--text-muted); border:1px solid var(--border-color);">Logout</button>
+        </div>
+
+        <div class="stats-grid mb-4">
+            <div class="card stat-box" style="margin-bottom:0;">
+                <p class="text-muted">Total Appointments</p>
+                <h2 id="totalAppts">0</h2>
+            </div>
+            <div class="card stat-box" style="margin-bottom:0;">
+                <p class="text-muted">Currently Waiting</p>
+                <h2 id="waitingAppts">0</h2>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Live Queue</h3>
+            <table id="queueTable">
+                <thead>
+                    <tr><th>Token</th><th>Patient Name</th><th>Phone</th><th>Status</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const doctorId = localStorage.getItem('doctorId');
+        if (!doctorId) window.location.href = 'login.html';
+
+        document.getElementById('docName').innerText = localStorage.getItem('doctorName');
+        document.getElementById('currentDate').innerText = `Queue for ${new Date().toLocaleDateString()}`;
+
+        async function loadData() {
+            // Stats
+            const statsRes = await fetch(`http://localhost:5000/api/doctor/stats/${doctorId}`);
+            const stats = await statsRes.json();
+            document.getElementById('totalAppts').innerText = stats.total_appointments;
+            document.getElementById('waitingAppts').innerText = stats.patients_waiting;
+
+            // Queue
+            const queueRes = await fetch(`http://localhost:5000/api/doctor/queue/${doctorId}`);
+            const queue = await queueRes.json();
+            const tbody = document.querySelector('#queueTable tbody');
+            tbody.innerHTML = queue.map(q => `
+                <tr>
+                    <td><strong style="color:var(--primary); font-size:1.2rem;">#${q.token_number}</strong></td>
+                    <td>${q.patient_id.name}</td>
+                    <td>${q.patient_id.phone || '--'}</td>
+                    <td><span class="badge badge-waiting">In Queue</span></td>
+                </tr>
+            `).join('');
+            if (queue.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">No patients in queue today.</td></tr>';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        loadData();
+        setInterval(loadData, 10000); // Auto-refresh every 10s
+    </script>
+</body>
+</html>

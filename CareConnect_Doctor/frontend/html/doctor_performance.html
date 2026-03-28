@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Doctor Performance Analytics</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar" id="sidebar"></div>
+        
+        <div class="main-content">
+            <div class="flex-between mb-4 glass-panel" style="padding:1.5rem; border-radius:12px;">
+                <h2 style="color:var(--text-main);"><i class="fa-solid fa-chart-line text-primary" style="margin-right:10px;"></i> Advanced Performance Analytics</h2>
+                <select class="form-control" style="width:200px; padding: 0.6rem 1rem; border-radius:8px; border:1px solid var(--glass-border); outline:none;" onchange="loadAnalytics()">
+                    <option>This Week</option>
+                    <option>Today</option>
+                    <option>This Month</option>
+                </select>
+            </div>
+
+            <div class="grid-4 mb-4">
+                <div class="card text-center" style="border-bottom: 4px solid var(--primary);">
+                    <div class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Total Patients Handled</div>
+                    <div style="font-size: 3rem; font-weight:700; color:var(--primary);" id="perfTotal">0</div>
+                </div>
+                <div class="card text-center" style="border-bottom: 4px solid var(--success);">
+                    <div class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Avg. Consult Time</div>
+                    <div style="font-size: 3rem; font-weight:700; color:var(--success);"><span id="perfAvg">0</span><span style="font-size:1.5rem;">m</span></div>
+                </div>
+                <div class="card text-center" style="border-bottom: 4px solid var(--warning);">
+                    <div class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Peak Rush Hour</div>
+                    <div style="font-size: 3rem; font-weight:700; color:var(--warning);" id="perfPeak">--</div>
+                </div>
+                <div class="card text-center" style="border-bottom: 4px solid #8b5cf6;">
+                    <div class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Patient Satisfaction</div>
+                    <div style="font-size: 3rem; font-weight:700; color:#8b5cf6;"><span id="perfSat">0</span><span style="font-size:1rem; color:var(--text-muted);">/5 <i class="fa-solid fa-star" style="color:#fcd34d;"></i></span></div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 class="mb-4">Patients Over Time</h3>
+                    <canvas id="patientsChart" style="height:320px; width:100%;"></canvas>
+                </div>
+                <div class="card">
+                    <h3 class="mb-4">Consultation Time Density</h3>
+                    <canvas id="timeChart" style="height:320px; width:100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        renderSidebar('performance');
+
+        let ch1, ch2;
+
+        async function loadAnalytics() {
+            const data = await api.getPerformance();
+            
+            document.getElementById('perfTotal').innerText = data.total_handled;
+            const overallAvg = Math.round(data.avgConsultTime.reduce((a,b)=>a+b,0)/data.avgConsultTime.length);
+            document.getElementById('perfAvg').innerText = overallAvg;
+            document.getElementById('perfSat').innerText = data.satisfaction;
+            
+            // find peak hour
+            let maxH = '', maxV = 0;
+            for(const [k,v] of Object.entries(data.peakHours)) { if(v > maxV) { maxV = v; maxH = k; } }
+            document.getElementById('perfPeak').innerText = maxH;
+
+            renderCharts(data);
+        }
+
+        function renderCharts(data) {
+            const ctx1 = document.getElementById('patientsChart').getContext('2d');
+            const ctx2 = document.getElementById('timeChart').getContext('2d');
+
+            if(ch1) ch1.destroy();
+            if(ch2) ch2.destroy();
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = "#64748b";
+
+            ch1 = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+                    datasets: [{
+                        label: 'Total Patients',
+                        data: data.dailyPatients,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#2563eb',
+                        pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } } }
+            });
+
+            ch2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+                    datasets: [{
+                        label: 'Avg Consult Time (mins)',
+                        data: data.avgConsultTime,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        loadAnalytics();
+    </script>
+</body>
+</html>

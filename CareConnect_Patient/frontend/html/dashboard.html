@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CareConnect</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <div class="flex-between mb-4">
+                <div>
+                    <h1 id="welcomeText">Welcome back!</h1>
+                    <p class="text-muted">Here is your healthcare overview</p>
+                </div>
+                <div style="font-size: 2rem; color: var(--primary);">
+                    <i class="fa-solid fa-circle-user"></i>
+                </div>
+            </div>
+
+            <div class="grid-2 mb-4">
+                <div class="glass-panel card">
+                    <h2 class="mb-2"><i class="fa-regular fa-calendar-check text-success"></i> Upcoming Appointment</h2>
+                    <div id="upcomingAppt">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+                <div class="glass-panel card" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white;">
+                    <h2 class="mb-2" style="color: white;"><i class="fa-solid fa-notes-medical"></i> Quick Actions</h2>
+                    <div class="grid-2 mt-2">
+                        <a href="booking.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fa-solid fa-plus"></i> New Booking
+                        </a>
+                        <a href="queue.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fa-solid fa-list-ol"></i> Track Queue
+                        </a>
+                        <a href="prescriptions.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fa-solid fa-pills"></i> My Medicines
+                        </a>
+                        <a href="profile.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
+                            <i class="fa-solid fa-gear"></i> Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="mb-2 mt-4">Recent Prescriptions</h2>
+            <div class="glass-panel card p-0">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentPrescriptions">
+                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('dashboard');
+        
+        document.getElementById('welcomeText').innerText = `Welcome back, ${localStorage.getItem('careconnect_name')}!`;
+
+        async function loadDashboard() {
+            try {
+                // Appointments
+                const appts = await api.getAppointments();
+                const active = appts.find(a => a.status === 'Waiting' || a.status === 'In-Consultation');
+                const apptDiv = document.getElementById('upcomingAppt');
+                
+                if (active) {
+                    // Fetch real-time queue details
+                    const q = await api.getQueueStatus(active.doctorId || active.doctor_id?._id);
+                    
+                    apptDiv.innerHTML = `
+                        <div class="flex-between">
+                            <div>
+                                <p><strong>Dr. ${active.doctor_name}</strong></p>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -4px; margin-bottom: 8px;">Reason: ${q.reason_for_visit || active.reason_for_visit || 'General'}</p>
+                                <span class="badge ${active.status === 'In-Consultation' ? 'badge-primary' : 'badge-warning'}">${active.status}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOKEN</div>
+                                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">#${q.token_number || active.token_number || '-'}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid-2 mt-4" style="background: rgba(255,255,255,0.5); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <div class="text-center">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">QUEUE POSITION</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">${q.queue_position || '-'}</div>
+                            </div>
+                            <div class="text-center" style="border-left: 1px solid var(--glass-border);">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">EST. WAIT TIME</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);">${q.estimated_wait_time_mins || 0} mins</div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-people-arrows"></i> <strong>${q.patients_ahead || 0}</strong> people ahead of you</p>
+                        </div>
+                    `;
+                } else {
+                    apptDiv.innerHTML = `
+                        <p class="text-muted mb-4">You don't have any active appointments today.</p>
+                        <a href="booking.html" class="btn-primary" style="justify-content: center; width: 100%;">
+                            <i class="fa-solid fa-calendar-plus"></i> Book Your Spot in Queue
+                        </a>
+                    `;
+                }
+
+                // Prescriptions
+                const rx = await api.getPrescriptions();
+                const rxTbody = document.getElementById('recentPrescriptions');
+                if (!rx || rx.length === 0) {
+                    rxTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No recent prescriptions</td></tr>';
+                } else {
+                    rxTbody.innerHTML = rx.slice(0, 3).map(p => `
+                        <tr>
+                            <td>${new Date(p.created_at || p.date).toLocaleDateString()}</td>
+                            <td>Dr. ${p.doctor_name}</td>
+                            <td><a href="prescriptions.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">View Details</a></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error("Dashboard error:", err);
+            }
+        }
+        
+        loadDashboard();
+    </script>
+</body>
+</html>

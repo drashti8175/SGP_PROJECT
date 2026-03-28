@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Patient Medical History Timeline</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar" id="sidebar"></div>
+        
+        <div class="main-content">
+            <h2 class="mb-4"><i class="fa-solid fa-timeline text-primary" style="margin-right:10px;"></i> Patient Medical History Timeline</h2>
+            
+            <div class="card mb-4 flex-between" style="background:rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                <div style="flex:1;">
+                    <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Search Patient Database</div>
+                    <div style="display:flex; gap:10px; margin-top:5px; align-items:center;">
+                        <input type="text" id="demoIdFake" class="form-control" style="width: 350px; padding:0.75rem 1rem; border-radius:8px; border:1px solid var(--glass-border); outline:none;" placeholder="Enter Patient ID, Name, or E-mail">
+                        <button class="btn btn-primary" onclick="loadPatient()"><i class="fa-solid fa-magnifying-glass"></i> Fetch Timeline</button>
+                    </div>
+                </div>
+                <div id="patientBasicInfo" style="display:none; text-align:right; border-left: 2px solid var(--glass-border); padding-left: 2rem;">
+                    <h2 id="pName" style="color:var(--text-main); margin-bottom:5px;">--</h2>
+                    <div class="text-muted" style="font-size:0.95rem; font-weight:500;" id="pDemographics">--</div>
+                </div>
+            </div>
+
+            <div class="timeline" id="historyTimeline" style="display:none; padding-top:1rem;">
+                <!-- Timeline items will load here -->
+            </div>
+            
+            <div id="emptyState" class="card text-center" style="padding: 4rem 2rem; background:transparent; border:2px dashed var(--glass-border);">
+                <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
+                <p class="text-muted" style="font-size:1.1rem;">Search a patient to view their complete medical timeline.</p>
+                <p style="font-size:0.85rem; color:var(--primary); margin-top:10px;">For the demonstration, just click 'Fetch Timeline' without typing.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        renderSidebar('history');
+
+        // We will mock looking up the first available patient to demo the timeline beautifully
+        async function loadPatient() {
+            // First hit the queue route to snag a valid patient objectId from dummy data
+            const queue = await api.getQueue();
+            if(queue.length === 0) return alert("System has no patients recorded in the local memory DB right now.");
+            
+            const pId = queue[0].patient_id._id;
+            
+            // 1. Fetch Patient profile
+            const pInfo = await api.getPatientInfo(pId);
+            document.getElementById('patientBasicInfo').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('historyTimeline').style.display = 'block';
+
+            document.getElementById('pName').innerText = pInfo.name;
+            document.getElementById('pDemographics').innerText = `<i class="fa-solid fa-venus-mars"></i> ${pInfo.gender} | <i class="fa-solid fa-droplet text-danger"></i> Blood: ${pInfo.blood_group} | DOB: ${new Date(pInfo.dob).toLocaleDateString()}`;
+
+            // 2. Fetch Timeline History
+            const history = await api.getPatientHistory(pId);
+            const tl = document.getElementById('historyTimeline');
+            
+            if(history.length === 0) {
+                tl.innerHTML = '<p class="text-muted">No historical records found for this patient.</p>';
+            } else {
+                tl.innerHTML = history.map(h => `
+                    <div class="timeline-item">
+                        <div class="timeline-date"><i class="fa-regular fa-calendar" style="margin-right:5px;"></i> ${new Date(h.date).toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
+                        <h3 style="margin-bottom:10px; color:var(--text-main); font-size:1.4rem;">${h.diagnosis}</h3>
+                        <p class="text-muted" style="font-size:0.95rem; margin-bottom:15px; line-height:1.6;"><strong>Doctor's Notes:</strong> ${h.notes}</p>
+                        
+                        <div style="background: rgba(255,255,255,0.8); border:1px solid rgba(0,0,0,0.05); padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:10px; text-transform:uppercase;"><i class="fa-solid fa-prescription-bottle-medical"></i> Prescribed Medication</div>
+                            <ul style="margin-left:20px; font-size:0.95rem; color:var(--text-main); display:flex; flex-direction:column; gap:8px;">
+                                ${h.medicines.map(m => `<li><strong style="color:var(--success);">${m.name}</strong> <span style="color:var(--text-muted);">(${m.dosage}) - ${m.duration}</span></li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>

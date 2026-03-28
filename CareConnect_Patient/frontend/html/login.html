@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Login</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="glass-panel login-card text-center">
+            <h1 class="mb-4" style="color: var(--primary);">
+                <i class="fa-solid fa-heart-pulse"></i> CareConnect
+            </h1>
+            <h2 class="mb-4">Patient Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="email" id="email" class="form-control" placeholder="Email Address" required value="john@example.com">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" class="form-control" placeholder="Password" required value="password123">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Login</button>
+            </form>
+            <p id="errorMsg" class="text-danger mt-2"></p>
+        </div>
+    </div>
+    
+    <script src="../js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                const res = await api.login(email, password);
+                if (res.success) {
+                    localStorage.setItem('careconnect_patientId', res.patientId);
+                    localStorage.setItem('careconnect_name', res.name);
+                    localStorage.setItem('token', res.token);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    document.getElementById('errorMsg').innerText = res.message || 'Login failed';
+                }
+            } catch (err) {
+                document.getElementById('errorMsg').innerText = 'Server error. Ensure backend is running.';
+            }
+        });
+    </script>
+</body>
+</html>

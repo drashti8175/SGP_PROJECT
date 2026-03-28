@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment History - CareConnect</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <h1 class="mb-4">Appointment History</h1>
+
+            <div class="glass-panel card p-0">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Specialization</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable">
+                        <tr><td colspan="4" class="text-center text-muted">Loading history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('history');
+
+        async function loadHistory() {
+            try {
+                const appts = await api.getAppointments(patientId);
+                const tbody = document.getElementById('historyTable');
+                
+                if (appts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No appointments found.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = appts.map(a => `
+                    <tr>
+                        <td>${new Date(a.date).toLocaleDateString()}</td>
+                        <td>Dr. ${a.doctor_id?.name || 'Unknown'}</td>
+                        <td>${a.doctor_id?.specialization || 'N/A'}</td>
+                        <td>
+                            <span class="status-badge status-${a.status.toLowerCase()}">${a.status}</span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                document.getElementById('historyTable').innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load history.</td></tr>';
+            }
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

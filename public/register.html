@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCore - Register</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- AUTHENTICATION WRAPPER -->
+    <div id="authContainer" class="auth-container active">
+        <!-- Left Banner (Premium Gradient) -->
+        <div class="auth-banner">
+            <div class="banner-content">
+                <i class="fa-solid fa-user-plus" style="font-size: 5rem; margin-bottom: 2rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));"></i>
+                <h1 class="auth-banner-title">Join Us</h1>
+                <p class="auth-banner-subtitle">Start your journey with MediCore</p>
+                <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; opacity: 0.7;">
+                    <i class="fa-solid fa-check-double"></i> Verified
+                    <i class="fa-solid fa-fingerprint"></i> Secure
+                    <i class="fa-solid fa-gauge-high"></i> Optimized
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side (Glass Forms) -->
+        <div class="auth-forms-wrapper">
+            <!-- Register Section -->
+            <section id="registerSection" class="auth-view active">
+                <div class="auth-card">
+                    <h2 class="auth-heading">Create Account</h2>
+                    <p class="auth-subtitle">Seamless healthcare starts here</p>
+                    
+                    <form id="registerForm" onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label class="auth-label">Full Name</label>
+                            <input type="text" id="regName" class="auth-input" placeholder="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="auth-label">Email Address</label>
+                            <input type="email" id="regEmail" class="auth-input" placeholder="john@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="auth-label">Password</label>
+                            <input type="password" id="regPassword" class="auth-input" placeholder="••••••••" required>
+                        </div>
+                        <div style="text-align: right; margin-bottom: 2rem;">
+                            <a href="index.html" class="auth-link">Already have an account? Sign In</a>
+                        </div>
+                        <button type="submit" class="auth-btn">Create My Account</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

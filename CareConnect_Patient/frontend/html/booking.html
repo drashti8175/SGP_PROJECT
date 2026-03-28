@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - CareConnect</title>
+    <style>
+        .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .doctor-card {
+            background: rgba(255, 255, 255, 0.4); border: 2px solid transparent; border-radius: 16px; padding: 1.5rem;
+            text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .doctor-card:hover { transform: translateY(-5px); background: white; border-color: var(--primary-light); }
+        .doctor-card.selected { border-color: var(--primary); background: var(--primary-light); color: white; }
+        .doctor-card.selected p { color: rgba(255,255,255,0.8); }
+        .doctor-card i { font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; }
+        .doctor-card.selected i { color: white; }
+        .doctor-card h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .doctor-card p { font-size: 0.85rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <h1 class="mb-4">Book an Appointment</h1>
+
+            <div class="glass-panel card" style="max-width: 800px;">
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label class="form-label">Step 1: Choose Your Specialist</label>
+                        <div id="doctorGrid" class="doctor-grid">
+                            <!-- Cards will be injected here -->
+                        </div>
+                        <input type="hidden" id="doctorSelect" required>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label">Step 2: Reason for Visit</label>
+                        <textarea id="reason_for_visit" class="form-control" placeholder="Describe your health concern..." rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Step 3: Appointment Type</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <label style="flex: 1; cursor: pointer; border: 1px solid var(--glass-border); padding: 10px; border-radius: 8px; text-align: center;">
+                                <input type="radio" name="priority" value="Normal" checked> Normal
+                            </label>
+                            <label style="flex: 1; cursor: pointer; border: 1px solid var(--danger-light); padding: 10px; border-radius: 8px; text-align: center; color: var(--danger);">
+                                <input type="radio" name="priority" value="Emergency"> Emergency
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        <i class="fa-solid fa-check"></i> Confirm Booking & Get Token
+                    </button>
+                </form>
+                <p id="bookingMsg" class="mt-2 text-center"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('booking');
+
+        async function loadDoctors() {
+            try {
+                const doctors = await api.getDoctors();
+                const grid = document.getElementById('doctorGrid');
+                
+                grid.innerHTML = doctors.map(d => `
+                    <div class="doctor-card" onclick="selectDoctor('${d.doctor_id}')" id="card-${d.doctor_id}">
+                        <i class="fa-solid fa-user-doctor"></i>
+                        <h3>${d.name}</h3>
+                        <p>${d.specialization}</p>
+                        <p class="mt-2" style="font-weight:700">$${d.consultationFee}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error("Failed to load doctors:", err);
+            }
+        }
+
+        function selectDoctor(id) {
+            document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`card-${id}`).classList.add('selected');
+            document.getElementById('doctorSelect').value = id;
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const doctor_id = document.getElementById('doctorSelect').value;
+            const reason_for_visit = document.getElementById('reason_for_visit').value;
+            const type = document.querySelector('input[name="priority"]:checked').value;
+
+            if(!doctor_id) return alert("Please select a doctor first!");
+            
+            try {
+                const res = await api.bookAppointment({ doctor_id, reason_for_visit, type });
+                if (res.success) {
+                    const msg = document.getElementById('bookingMsg');
+                    msg.className = 'mt-2 text-center text-success';
+                    msg.innerHTML = `<strong>Success!</strong> Your Token is <strong>#${res.token_number}</strong>. Redirecting to dashboard...`;
+                    setTimeout(() => window.location.href = 'dashboard.html', 2000);
+                }
+            } catch (err) {
+                const msg = document.getElementById('bookingMsg');
+                msg.className = 'mt-2 text-center text-danger';
+                msg.innerText = 'Error booking appointment.';
+            }
+        });
+
+        loadDoctors();
+    </script>
+</body>
+</html>

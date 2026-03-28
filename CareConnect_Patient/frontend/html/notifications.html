@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - CareConnect</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar glass-panel" id="sidebar-container"></div>
+        
+        <div class="main-content">
+            <h1 class="mb-4">Notifications</h1>
+
+            <div class="glass-panel card flex-column gap-2" id="notifContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Notifications load here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        const patientId = checkAuth();
+        renderSidebar('notifications');
+
+        async function loadNotifications() {
+            try {
+                const notifs = await api.getNotifications(patientId);
+                const container = document.getElementById('notifContainer');
+                
+                if (notifs.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">You have no new notifications.</p>';
+                    return;
+                }
+                
+                container.innerHTML = notifs.map(n => `
+                    <div style="padding: 1rem; border-left: 4px solid var(--primary); background: rgba(255,255,255,0.7); border-radius: 8px;">
+                        <div class="flex-between">
+                            <strong>${n.type.toUpperCase()}</strong>
+                            <small class="text-muted">${new Date(n.timestamp).toLocaleString()}</small>
+                        </div>
+                        <p class="mt-2 text-muted">${n.message}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                document.getElementById('notifContainer').innerHTML = '<p class="text-danger">Failed to load notifications.</p>';
+            }
+        }
+
+        loadNotifications();
+    </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCore - Premium Clinic Management</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .doctor-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .doc-card { 
+            background: var(--bg-card); border: 2px solid transparent; border-radius: 12px; padding: 1rem; text-align: center; 
+            cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow-sm); 
+        }
+        .doc-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary-light); }
+        .doc-card.selected { border-color: var(--primary); background: var(--primary-light); }
+        .doc-card i { font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; }
+        .doc-card h4 { margin: 0.5rem 0 0.2rem; font-size: 0.95rem; }
+        .doc-card p { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION WRAPPER -->
+    <div id="authContainer" class="auth-container active">
+        <!-- Left Banner (Premium Gradient) -->
+        <div class="auth-banner">
+            <div class="banner-content">
+                <i class="fa-solid fa-staff-snake" style="font-size: 5rem; margin-bottom: 2rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));"></i>
+                <h1 class="auth-banner-title">MediCore</h1>
+                <p class="auth-banner-subtitle">The Future of Clinic Management</p>
+                <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; opacity: 0.7;">
+                    <i class="fa-solid fa-shield-halved"></i> Secure
+                    <i class="fa-solid fa-bolt"></i> Fast
+                    <i class="fa-solid fa-heart-pulse"></i> Reliable
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side (Glass Forms) -->
+        <div class="auth-forms-wrapper">
+            <!-- Login Section -->
+            <section id="loginSection" class="auth-view active">
+                <div class="auth-card">
+                    <h2 class="auth-heading">Welcome Back</h2>
+                    <p class="auth-subtitle">Elevating your healthcare workflow</p>
+                    
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label class="auth-label">Email Address</label>
+                            <input type="email" id="loginEmail" class="auth-input" placeholder="name@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="auth-label">Password</label>
+                            <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required>
+                        </div>
+                        <div style="text-align: right; margin-bottom: 2rem;">
+                            <a href="register.html" class="auth-link">Don't have an account? Join Now</a>
+                        </div>
+                        <button type="submit" class="auth-btn">Sign In to Dashboard</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- MAIN APP LAYOUT (Sidebar + Top Navbar + Content) -->
+    <div id="appLayout">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-staff-snake"></i>
+                <h2>MediCore</h2>
+            </div>
+            
+            <ul class="nav-links" id="sidebarNavs">
+                <!-- Nav items injected dynamically via JS based on role -->
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="nav-item text-danger" onclick="logout()" style="color: var(--danger);">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area Wrapper -->
+        <div class="main-wrapper">
+            
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="search-bar">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" placeholder="Search patients, records, doctors...">
+                </div>
+                
+                <div class="nav-actions">
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="themeToggleBtn">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button class="icon-btn" title="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown">
+                        <div class="user-info" style="text-align: right;">
+                            <span class="user-name" id="userNameDisplay">John Doe</span>
+                            <span class="user-role" id="userRoleDisplay">Patient</span>
+                        </div>
+                        <div class="avatar" id="userAvatar">JD</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Views -->
+            <main id="mainContentViews">
+
+                <!-- PATIENT DASHBOARD -->
+                <section id="patientDashboard" class="content-view">
+                    <div class="page-header">
+                        <h1 class="page-title">Patient Portal</h1>
+                        <p class="page-subtitle">Manage your appointments, prescriptions, and health records.</p>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <!-- Book Appointment Card -->
+                        <div class="card">
+                            <h3 class="card-title">Book Consultation <i class="fa-regular fa-calendar-plus text-primary"></i></h3>
+                            <form onsubmit="handleBooking(event)">
+                                <div class="form-group">
+                                   <label>Choose Your Specialist</label>
+                                   <div id="doctorCardGrid" class="doctor-card-grid">
+                                       <!-- Dynamic Cards -->
+                                   </div>
+                                   <input type="hidden" id="bookDoctorId" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Reason for Visit</label>
+                                    <textarea id="bookReason" class="form-control" rows="3" placeholder="Explain why you need to visit the doctor..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Appointment Priority</label>
+                                    <div style="display:flex; gap:10px;">
+                                        <label style="flex:1; padding:10px; border:1px solid var(--border-solid); border-radius:8px; cursor:pointer; text-align:center;">
+                                            <input type="radio" name="priority" value="Normal" checked> Normal
+                                        </label>
+                                        <label style="flex:1; padding:10px; border:1px solid var(--danger-light); border-radius:8px; cursor:pointer; text-align:center; color:var(--danger);">
+                                            <input type="radio" name="priority" value="Emergency"> Emergency
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn"><i class="fa-solid fa-check"></i> Confirm Booking</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Live Queue Card -->
+                        <div class="card" id="myQueueCard" style="border-top: 4px solid var(--primary);">
+                            <h3 class="card-title">Live Queue Status <i class="fa-solid fa-tower-broadcast" style="color:var(--primary);"></i></h3>
+                            <div class="form-group">
+                               <label>Tracking Queue For:</label>
+                               <select id="viewQueueDoctorId" class="form-control" onchange="fetchPatientQueue(); fetchFullQueue()"></select>
+                            </div>
+                            <div id="queueMetrics" style="margin-top: 1.5rem;">
+                                <!-- Skeleton loader initially -->
+                                <div class="skeleton skeleton-text"></div>
+                                <div class="skeleton skeleton-text" style="width:60%"></div>
+                            </div>
+
+                            <!-- Full Queue Table (New) -->
+                            <div style="margin-top:2rem; border-top: 1px solid var(--border-solid); padding-top:1rem;">
+                                <h4 style="font-size:0.9rem; margin-bottom:1rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Live Doctor Queue</h4>
+                                <div id="fullQueueList" style="max-height: 300px; overflow-y:auto; padding-right:5px;">
+                                    <p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">Select a doctor to view the queue.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appointments History Timeline -->
+                    <div class="card" style="margin-top:2rem">
+                        <h3 class="card-title">My Appointments <button class="btn btn-secondary" style="font-size:0.75rem;"><i class="fa-solid fa-download"></i> Export</button></h3>
+                        <div class="table-responsive">
+                            <table id="patientAppointmentsTable">
+                                <thead><tr><th>Date & Token</th><th>Doctor / Reason</th><th>Status</th><th>Payment</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Prescriptions Grid -->
+                    <div class="card" style="margin-top:2rem">
+                        <h3 class="card-title">Prescriptions & Reports <button class="btn" style="font-size:0.75rem;" onclick="document.getElementById('uploadReport').click()"><i class="fa-solid fa-upload"></i> Upload</button></h3>
+                        <input type="file" id="uploadReport" class="hidden">
+                        <div id="patientPrescriptionsList" class="grid grid-3" style="margin-top: 1.5rem;">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DOCTOR DASHBOARD -->
+                <section id="doctorDashboard" class="content-view">
+                    <div class="page-header">
+                        <h1 class="page-title">Doctor Dashboard</h1>
+                        <p class="page-subtitle">Manage your live queue and patient consultations.</p>
+                    </div>
+
+                    <!-- Doctor Stat Cards (New) -->
+                    <div class="grid grid-3" style="margin-bottom: 2rem;">
+                        <div class="card">
+                            <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;">Total In Queue</div>
+                            <div style="font-size:2rem; font-weight:800; color:var(--primary);" id="docStatTotal">0</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Assigned to you today</div>
+                        </div>
+                        <div class="card">
+                            <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;">Waiting For Call</div>
+                            <div style="font-size:2rem; font-weight:800; color:var(--warning);" id="docStatWaiting">0</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Ready for consultation</div>
+                        </div>
+                        <div class="card">
+                            <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;">Next Up</div>
+                            <div style="font-size:1.5rem; font-weight:700; color:var(--secondary);" id="docStatNext">--</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Token # & Name</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2" style="grid-template-columns: 2fr 1fr;">
+                        <!-- Live Queue Monitor -->
+                        <div class="card" style="border-top: 4px solid var(--secondary);">
+                            <h3 class="card-title">Live Queue Monitor <span class="badge badge-in-consultation" id="docQueueActiveCnt">0 Active</span></h3>
+                            <div class="table-responsive" style="max-height: 500px; overflow-y:auto;">
+                                <table id="doctorQueueTable">
+                                    <thead><tr><th>Token</th><th>Patient / Reason</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Side panel / Quick Actions (Inline Consultation) -->
+                        <div class="card" id="consultationPanel" style="position:sticky; top:2.5rem; max-height: 90vh; overflow-y:auto;">
+                            <h3 class="card-title">Live Consultation</h3>
+                            <div id="currentPatientCard" style="text-align:center;">
+                                <div style="width:60px; height:60px; border-radius:50%; background:var(--primary-light); color:var(--primary); font-size:1.5rem; display:flex; align-items:center; justify-content:center; margin: 0 auto 10px;">
+                                    <i class="fa-regular fa-user"></i>
+                                </div>
+                                <h4 style="font-size:1.1rem;" id="currentPatientName">Select a Patient</h4>
+                                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;" id="currentPatientMetadata">--</p>
+                                
+                                <!-- Vitals Grid -->
+                                <div class="grid grid-3" style="gap:5px; margin-bottom:1.5rem;" id="vitalsGrid">
+                                    <div style="background:var(--bg-color); padding:8px; border-radius:8px;">
+                                        <div style="font-size:0.6rem; color:var(--text-muted);">BP</div>
+                                        <div style="font-weight:700; font-size:0.8rem;" id="vitalBP">--</div>
+                                    </div>
+                                    <div style="background:var(--bg-color); padding:8px; border-radius:8px;">
+                                        <div style="font-size:0.6rem; color:var(--text-muted);">Temp</div>
+                                        <div style="font-weight:700; font-size:0.8rem;" id="vitalTemp">--</div>
+                                    </div>
+                                    <div style="background:var(--bg-color); padding:8px; border-radius:8px;">
+                                        <div style="font-size:0.6rem; color:var(--text-muted);">Weight</div>
+                                        <div style="font-weight:700; font-size:0.8rem;" id="vitalWeight">--</div>
+                                    </div>
+                                </div>
+
+                                <!-- Past History Section -->
+                                <div style="text-align:left; border-top: 1px solid var(--border-solid); padding-top:0.8rem; margin-top:0.8rem;">
+                                    <h5 style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">Medical History</h5>
+                                    <div id="patientHistoryList" style="max-height:120px; overflow-y:auto; font-size:0.8rem; background:rgba(0,0,0,0.02); padding:5px; border-radius:5px;">
+                                        <p style="color:var(--text-muted); text-align:center;">No history</p>
+                                    </div>
+                                </div>
+
+                                <!-- Inline Prescription Form (Visible when consulting) -->
+                                <div id="inlinePrescriptionForm" class="hidden" style="text-align:left; border-top: 1px solid var(--border-solid); padding-top:1rem; margin-top:1rem;">
+                                    <h5 style="font-size:0.75rem; color:var(--primary); text-transform:uppercase; margin-bottom:10px;">Write Prescription</h5>
+                                    <form id="prescForm" onsubmit="handlePrescriptionSubmit(event)">
+                                        <input type="hidden" id="prescApptId">
+                                        <input type="hidden" id="prescPatientId">
+                                        
+                                        <div class="form-group">
+                                            <label style="font-size:0.75rem;">Diagnosis</label>
+                                            <input id="prescDiagnosis" class="form-control" style="padding:0.5rem; font-size:0.85rem;" required placeholder="e.g. Acute Gastritis">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label style="font-size:0.75rem;">Medicines</label>
+                                            <div id="medicineRows">
+                                                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:3px; margin-bottom:3px;">
+                                                   <input type="text" class="form-control med-name" style="padding:0.4rem; font-size:0.75rem;" placeholder="Med" required>
+                                                   <input type="text" class="form-control med-dose" style="padding:0.4rem; font-size:0.75rem;" placeholder="Dose" required>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary" style="font-size:0.6rem; padding:2px 5px;" onclick="addMedicineRow()"><i class="fa-solid fa-plus"></i> Add</button>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label style="font-size:0.75rem;">Advice</label>
+                                            <textarea id="prescNotes" class="form-control" style="padding:0.5rem; font-size:0.8rem;" rows="2" placeholder="Rest for 2 days..."></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success" style="width:100%; padding:0.8rem; margin-top:10px;"><i class="fa-solid fa-check-double"></i> FINISH TREATMENT</button>
+                                    </form>
+                                </div>
+
+                                <div style="margin-top: 1.5rem; display:flex; flex-direction:column; gap:8px;" id="currentPatientActions">
+                                    <p style="font-size:0.8rem; color:var(--text-muted);">Please call a patient from the queue to start.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RECEPTIONIST DASHBOARD -->
+                <section id="receptionistDashboard" class="content-view">
+                    <div class="page-header">
+                        <h1 class="page-title">Reception Console</h1>
+                        <p class="page-subtitle">Manage appointments, arrivals, and payments.</p>
+                    </div>
+
+                    <div class="grid grid-4" style="margin-bottom: 2rem;">
+                        <div class="card" style="padding: 1.5rem; text-align:center;">
+                            <i class="fa-regular fa-calendar-check" style="font-size:2rem; color:var(--primary); margin-bottom:1rem;"></i>
+                            <h2 style="font-size:1.8rem;" id="receptPendingReq">0</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; font-weight:600;">Pending Requests</p>
+                        </div>
+                        <div class="card" style="padding: 1.5rem; text-align:center;">
+                            <i class="fa-solid fa-qrcode" style="font-size:2rem; color:var(--secondary); margin-bottom:1rem; cursor:pointer;" onclick="alert('Simulating QR Scanner open!')" title="Open Scanner"></i>
+                            <h2 style="font-size:1.8rem;">Scan</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; font-weight:600;">Check-In Patient</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            <h3>Appointment Workflow</h3>
+                            <div class="search-bar" style="width:250px; background:var(--bg-color);">
+                                <i class="fa-solid fa-filter"></i>
+                                <input type="text" placeholder="Filter by name...">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="receptionistTable">
+                                <thead><tr><th>Date & Token</th><th>Patient Details</th><th>Doctor</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ADMIN DASHBOARD -->
+                <section id="adminDashboard" class="content-view">
+                    <div class="page-header">
+                        <h1 class="page-title">Clinic Overview</h1>
+                        <p class="page-subtitle">System-wide analytics and administration.</p>
+                    </div>
+
+                    <div class="grid grid-3" style="margin-bottom: 2rem;">
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div style="color:var(--text-muted); font-weight:600; font-size:0.9rem; text-transform:uppercase;">Patients Today</div>
+                                <div style="background:var(--primary-light); color:var(--primary); padding:8px; border-radius:8px;"><i class="fa-solid fa-users"></i></div>
+                            </div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);" id="statPatients">0</div>
+                            <div style="font-size:0.8rem; color:var(--secondary); font-weight:500; margin-top:5px;"><i class="fa-solid fa-arrow-trend-up"></i> +12% from yesterday</div>
+                        </div>
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div style="color:var(--text-muted); font-weight:600; font-size:0.9rem; text-transform:uppercase;">Daily Revenue</div>
+                                <div style="background:rgba(16, 185, 129, 0.1); color:var(--secondary); padding:8px; border-radius:8px;"><i class="fa-solid fa-wallet"></i></div>
+                            </div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);" id="statRevenue">$0</div>
+                            <div style="font-size:0.8rem; color:var(--secondary); font-weight:500; margin-top:5px;"><i class="fa-solid fa-arrow-trend-up"></i> +5% from yesterday</div>
+                        </div>
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div style="color:var(--text-muted); font-weight:600; font-size:0.9rem; text-transform:uppercase;">Active Doctors</div>
+                                <div style="background:rgba(245, 158, 11, 0.1); color:var(--warning); padding:8px; border-radius:8px;"><i class="fa-solid fa-user-doctor"></i></div>
+                            </div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);" id="statDoctors">0</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); font-weight:500; margin-top:5px;">All available</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="grid grid-2" style="margin-bottom: 2rem;">
+                        <div class="card">
+                            <h3 class="card-title">Patient Appointments (Week)</h3>
+                            <div class="chart-container">
+                                <canvas id="patientChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 class="card-title">Revenue Trends (Week)</h3>
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            <h3>System Users Directory</h3>
+                            <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-user-plus"></i> Add User</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="adminUsersTable">
+                                <thead><tr><th>User</th><th>Contact</th><th>Role</th><th>Registered</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Floating Assistant (Add-on) -->
+    <button style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; background:var(--primary); color:white; border:none; box-shadow:var(--shadow-lg); font-size:1.5rem; cursor:pointer; z-index:100; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        <i class="fa-regular fa-comment-dots"></i>
+    </button>
+
+    <!-- Required Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- App Logic -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
