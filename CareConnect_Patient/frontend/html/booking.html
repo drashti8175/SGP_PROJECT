@@ -20,45 +20,51 @@
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar glass-panel" id="sidebar-container"></div>
-        
-        <div class="main-content">
-            <h1 class="mb-4">Book an Appointment</h1>
-
-            <div class="glass-panel card" style="max-width: 800px;">
-                <form id="bookingForm">
-                    <div class="form-group">
-                        <label class="form-label">Step 1: Choose Your Specialist</label>
-                        <div id="doctorGrid" class="doctor-grid">
-                            <!-- Cards will be injected here -->
-                        </div>
-                        <input type="hidden" id="doctorSelect" required>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 1.5rem;">
-                        <label class="form-label">Step 2: Reason for Visit</label>
-                        <textarea id="reason_for_visit" class="form-control" placeholder="Describe your health concern..." rows="3" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Step 3: Appointment Type</label>
-                        <div style="display: flex; gap: 1rem;">
-                            <label style="flex: 1; cursor: pointer; border: 1px solid var(--glass-border); padding: 10px; border-radius: 8px; text-align: center;">
-                                <input type="radio" name="priority" value="Normal" checked> Normal
-                            </label>
-                            <label style="flex: 1; cursor: pointer; border: 1px solid var(--danger-light); padding: 10px; border-radius: 8px; text-align: center; color: var(--danger);">
-                                <input type="radio" name="priority" value="Emergency"> Emergency
-                            </label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
-                        <i class="fa-solid fa-check"></i> Confirm Booking & Get Token
-                    </button>
-                </form>
-                <p id="bookingMsg" class="mt-2 text-center"></p>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1>Book an Appointment</h1>
+                <p>Schedule a visit with our specialists</p>
             </div>
+            <div class="header-actions">
+                <button class="icon-btn notification-badge" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            </div>
+        </div>
+
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label class="form-label">Step 1: Choose Your Specialist</label>
+                    <div id="doctorGrid" class="doctor-grid">
+                        <!-- Cards will be injected here -->
+                    </div>
+                    <input type="hidden" id="doctorSelect">
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label">Step 2: Reason for Visit</label>
+                    <textarea id="reason_for_visit" class="form-textarea" placeholder="Describe your health concern..." rows="3" required></textarea>
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label">Step 3: Appointment Type</label>
+                    <div style="display: flex; gap: 16px;">
+                        <label style="flex: 1; cursor: pointer; border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; background: var(--secondary); transition: all 0.2s; font-weight: 500;">
+                            <input type="radio" name="priority" value="Normal" checked style="margin-right: 8px;"> Normal Visit
+                        </label>
+                        <label style="flex: 1; cursor: pointer; border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 12px; text-align: center; color: var(--danger); background: rgba(239, 68, 68, 0.05); transition: all 0.2s; font-weight: 500;">
+                            <input type="radio" name="priority" value="Emergency" style="margin-right: 8px;"> Emergency
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 24px; font-size: 1.05rem;">
+                    <i class="fa-solid fa-calendar-check"></i> Confirm Booking & Get Token
+                </button>
+            </form>
+            <div id="bookingMsg" class="mt-4 text-center" style="font-size: 1.1rem;"></div>
         </div>
     </div>
 

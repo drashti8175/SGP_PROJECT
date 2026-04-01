@@ -92,16 +92,17 @@ router.get('/me', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('-password');
         if (!user) return res.status(404).json({ error: "User not found." });
-        res.json({
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Database error." });
-    }
+        res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
+    } catch (err) { res.status(500).json({ error: "Database error." }); }
+});
+
+// Update Profile
+router.patch('/update-profile', verifyToken, async (req, res) => {
+    try {
+        const { phone, gender, blood_group, dob } = req.body;
+        await User.findByIdAndUpdate(req.userId, { phone, gender, blood_group, dob });
+        res.json({ message: 'Profile updated' });
+    } catch (err) { res.status(500).json({ error: 'Update failed' }); }
 });
 
 module.exports = router;

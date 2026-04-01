@@ -1,213 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareConnect - Doctor Dashboard</title>
+    <title>Doctor Dashboard | Hospital Manager</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS (Fixed Path for html subfolder) -->
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
-    <div class="app-container">
-        <div class="sidebar" id="sidebar"></div>
-        
-        <div class="main-content">
-            <!-- Header -->
-            <div class="top-header glass-panel" style="padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0;">
-                <div>
-                    <h2>Welcome, <span id="docName" style="color:var(--primary);">Doctor</span>!</h2>
-                    <p class="text-muted" id="realtime-clock">--:--:--</p>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-user-doctor"></i>
+            <span style="margin-left:8px;">MediCore</span>
+        </div>
+
+        <ul class="nav-links">
+            <li>
+                <a href="doctor_dashboard.html" class="nav-link active">
+                    <i class="fa-solid fa-grid-2"></i> <!-- Dashboard Icon -->
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="queue_management.html" class="nav-link">
+                    <i class="fa-solid fa-users-line"></i>
+                    <span>Queue</span>
+                </a>
+            </li>
+            <li>
+                <a href="patient_details.html" class="nav-link">
+                    <i class="fa-solid fa-hospital-user"></i>
+                    <span>Patient Details</span>
+                </a>
+            </li>
+            <li>
+                <a href="doctor_reports.html" class="nav-link">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li>
+                <a href="doctor_performance.html" class="nav-link">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>Performance</span>
+                </a>
+            </li>
+            <li style="margin-top: auto;">
+                <a href="doctor_profile.html" class="nav-link">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile" onclick="window.location.href='doctor_profile.html'" style="cursor: pointer; margin-top: auto;">
+            <div class="user-avatar">
+                <span>DR</span>
+            </div>
+            <div class="user-info">
+                <h4 style="margin:0; font-size:14px;">Dr. Rashmi</h4>
+                <p style="margin:0; font-size:12px; color:var(--text-muted)">Cardiologist</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="dashboard-page">
+        <!-- Header -->
+        <header class="header">
+            <div class="page-title">
+                <h1>Good Morning, Dr. Rashmi</h1>
+                <p class="text-muted">Here's what's happening in your clinic today.</p>
+            </div>
+
+            <div class="header-actions">
+                <div class="time-display" id="realtime-clock">
+                    <i class="fa-regular fa-clock"></i> --:--
                 </div>
-                
-                <div style="display: flex; gap: 1.5rem; align-items: center;">
-                    <!-- Existing: Announce Delay -->
-                    <button class="btn btn-outline" onclick="announceDelay()"><i class="fa-solid fa-bullhorn"></i> Announce Delay</button>
-                    <!-- Existing: Emergency Mode -->
-                    <button class="btn btn-danger" onclick="toggleEmergency()"><i class="fa-solid fa-truck-medical"></i> Emergency Mode</button>
-                    
-                    <!-- NEW: Smart Alerts -->
-                    <div class="notification-bell" onclick="toggleAlerts()">
-                        <i class="fa-solid fa-bell"></i>
-                        <div class="count" id="alertCountBadge" style="display:none;">0</div>
-                        
-                        <div class="alert-dropdown" id="alertsDropdown">
-                            <h4 class="mb-2">Smart Alerts</h4>
-                            <div id="alertsContainer">
-                                <p class="text-muted" style="font-size:0.85rem;">Loading alerts...</p>
+                <button class="icon-btn notification-badge" onclick="window.location.href='doctor_notifications.html'">
+                    <i class="fa-regular fa-bell"></i>
+                </button>
+                <button class="btn btn-primary" style="background-color: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="triggerEmergency()">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Emergency Mode
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="card-grid">
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-total" style="font-size: 2.2rem;">--</div>
+                <div class="stat-label" style="text-transform:uppercase;">Total Appointments</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.1);">
+                        <i class="fa-solid fa-hourglass-start"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-waiting" style="font-size: 2.2rem;">--</div>
+                <div class="stat-label" style="text-transform:uppercase;">Patients Waiting</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+                        <i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-emergency" style="font-size: 2.2rem;">--</div>
+                <div class="stat-label" style="text-transform:uppercase;">Emergencies</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+                <div class="stat-value" style="font-size: 2.2rem;">15m</div>
+                <div class="stat-label" style="text-transform:uppercase;">Avg. Consult Time</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Layout -->
+        <div class="dashboard-layout">
+            <!-- Left: Current Action -->
+            <section class="layout-section">
+                <!-- Next Patient Card -->
+                <div class="section-header mb-4">
+                    <h2 class="section-title">Current Consultation</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <span class="badge" style="background: var(--bg-color); color: var(--text-muted); padding:6px 14px; border:1px solid var(--border); border-radius:12px;"><i
+                                class="fa-solid fa-door-open"></i> Cabin 1</span>
+                        <a href="queue_management.html" class="btn btn-outline"
+                            style="padding: 6px 16px; font-size: 0.85rem;">View Full Queue</a>
+                    </div>
+                </div>
+
+                <div class="card patient-card mb-4" id="next-patient-card" style="border-top: 4px solid var(--accent);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom:20px;">
+                        <span class="badge" id="np-risk" style="padding:6px 12px; background:rgba(16,185,129,0.1); color:var(--success);">Low Risk</span>
+                        <div style="text-align: right;">
+                            <span
+                                style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">Status</span>
+                            <span id="np-status-text" style="font-weight: 600; color: var(--accent);">In 2 mins</span>
+                        </div>
+                    </div>
+
+                    <div class="patient-info-large">
+                        <div class="patient-avatar-large">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="patient-details">
+                            <h3 id="np-name">Loading...</h3>
+                            <div class="patient-meta">
+                                <span id="np-token">Token #--</span>
+                                <span>&bull;</span>
+                                <span id="np-complaint">Complaint</span>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Existing: Stats Cards -->
-            <div class="grid-4">
-                <div class="card"><p class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Total Appointments</p><h2 id="statTotal">0</h2></div>
-                <div class="card"><p class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Patients Waiting</p><h2 id="statWaiting">0</h2></div>
-                <div class="card"><p class="text-danger" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Emergency Queue</p><h2 id="statEmergency" class="text-danger">0</h2></div>
-                <div class="card"><p class="text-muted" style="font-size:0.85rem; font-weight:600; text-transform:uppercase;">Avg. Consult Time</p><h2 id="statAvg">--</h2></div>
-            </div>
-
-            <div class="dashboard-grid">
-                <!-- Existing: Active Queue Panel -->
-                <div class="card" style="border-top: 4px solid var(--primary);">
-                    <div class="flex-between mb-4">
-                        <h3>Live Patient Queue</h3>
-                        <div style="font-size:0.85rem; color:var(--text-muted);"><i class="fa-solid fa-rotate"></i> Auto-refreshing</div>
-                    </div>
-                    <table class="modern-table" id="queueTable">
-                        <thead>
-                            <tr><th>Token</th><th>Patient</th><th>Risk System</th><th>Status</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-
-                <!-- Right Side Modules -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Existing: Shift Overview -->
-                    <div class="card">
-                        <h3>Shift Progress</h3>
-                        <div class="flex-between mt-4 mb-2">
-                            <span class="text-muted" style="font-size:0.8rem; text-transform:uppercase; font-weight:600;">Completed vs Pending</span>
-                            <strong id="shiftText">0/0</strong>
-                        </div>
-                        <div style="height: 8px; background: var(--bg-color); border-radius: 4px; overflow: hidden; border:1px solid rgba(0,0,0,0.05);">
-                            <div id="shiftBar" style="height: 100%; background: var(--success); width: 0%;"></div>
+                    <div style="border-top: 1px solid var(--border); padding-top: 20px; margin-bottom:20px;">
+                        <div style="display: flex; gap: 40px;">
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; text-transform:uppercase;">Last
+                                    Visit</span>
+                                <span id="np-last-visit" style="font-weight: 500; color: var(--text-main);">12 Dec 2025</span>
+                            </div>
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; text-transform:uppercase;">Vitals</span>
+                                <span style="font-weight: 700; color: var(--success);"><i class="fa-solid fa-heart-pulse"></i> Stable</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Existing: Current Consultation Panel -->
-                    <div class="card" style="background: linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.7)); border:1px solid var(--primary-light);">
-                        <h3 class="mb-4" style="color: var(--primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 0.5rem;"><i class="fa-solid fa-stethoscope"></i> In Consultation</h3>
-                        
-                        <div id="currentPanel">
-                            <p class="text-muted text-center" style="padding:2rem;">No active consultation.</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Existing: Quick Actions -->
-                    <div class="grid-2">
-                        <button class="btn btn-primary" onclick="alert('Opening Rx Pad')"><i class="fa-solid fa-pills"></i> Rx Pad</button>
-                        <button class="btn btn-outline" style="background:white;" onclick="alert('Opening AI Assistant')"><i class="fa-solid fa-robot"></i> AI Assist</button>
-                        <button class="btn btn-outline" style="grid-column: span 2; border-color:var(--text-muted); color:var(--text-muted); background:white;" onclick="alert('Opening Lab Request UI')"><i class="fa-solid fa-flask"></i> Request Lab Test</button>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="btn-call-next" style="width: 100%; justify-content:center;">
+                            <i class="fa-solid fa-user-check"></i>
+                            Call Next Patient
+                        </button>
+                        <button class="btn btn-primary" id="btn-open-file" onclick="window.location.href='prescription.html'" style="display:none; width: 100%; justify-content:center; background: var(--success);" title="Start writing notes or prescribe meds">
+                            <i class="fa-solid fa-file-prescription"></i>
+                            Consult & Prescribe
+                        </button>
+                        <button class="btn btn-outline" style="min-width: 100px;" onclick="System.skipPatient(); location.reload();">
+                            <i class="fa-solid fa-forward"></i>
+                            Skip
+                        </button>
                     </div>
                 </div>
-            </div>
+
+                <!-- Shift Overview & Quick Actions -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="section-header mb-4">
+                        <h2 class="section-title" style="font-size: 1.1rem;"><i class="fa-solid fa-clipboard-list"
+                                style="color: var(--accent); margin-right:8px;"></i> Today's Overview</h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <p style="font-size: 0.9rem; font-weight:600; color: var(--text-muted); margin-bottom: 8px;">Shift Progress
+                            </p>
+                            <div
+                                style="width: 100%; background: var(--secondary); border:1px solid var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                                <div id="shiftBar" style="width: 35%; background: var(--success); height: 100%;"></div>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-main);"><strong id="shiftText">3h 15m</strong></p>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.9rem; font-weight:600; color: var(--text-muted); margin-bottom: 8px;">Quick Stats</p>
+                            <div style="display: flex; gap: 12px;">
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; padding:5px 10px; font-size:0.85rem;"><span id="waitingCountBadge">0</span> Waiting</span>
+                                <span class="badge" style="background: #dcfce7; color: #15803d; padding:5px 10px; font-size:0.85rem;"><span id="doneCountBadge">0</span> Done</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); margin-top: 20px; padding-top: 20px;">
+                        <h4 style="font-size: 1rem; color: var(--dark); margin-bottom: 12px;">Quick Actions</h4>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary"
+                                style="font-size: 0.9rem; padding: 10px 16px; flex: 1;" onclick="window.location.href='prescription.html'">
+                                <i class="fa-solid fa-file-prescription" style="color:var(--accent);"></i> New Rx
+                            </button>
+                            <button class="btn btn-secondary"
+                                style="font-size: 0.9rem; padding: 10px 16px; flex: 1;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color:#8b5cf6;"></i> AI Help
+                            </button>
+                            <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px 16px; flex: 1;"
+                                onclick="alert('Lab Requisition Form opening...')">
+                                <i class="fa-solid fa-flask text-warning"></i> Lab Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Upcoming Queue -->
+            <aside class="layout-section">
+                <!-- Tabs (Mock) -->
+                <div style="display: flex; gap: 16px; margin-bottom: 16px; border-bottom: 2px solid var(--border);">
+                    <div
+                        style="padding-bottom: 12px; border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 600; cursor: pointer;">
+                        Active Queue
+                    </div>
+                    <div style="padding-bottom: 12px; border-bottom: 2px solid transparent; color: var(--text-muted); font-weight:500; cursor: pointer;"
+                        onclick="window.location.href='queue_management.html'">
+                        Planned (<span id="plannedCounter">0</span>)
+                    </div>
+                </div>
+
+                <div class="queue-list" id="queue-list-container">
+                    <!-- JS will populate this -->
+                    <div style="text-align: center; color: var(--text-muted); padding: 50px 20px; background:white; border-radius:12px; border:1px solid var(--border);">Loading Queue...</div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem; background: var(--dark); color:white; border: none; cursor: pointer; display:flex; gap:15px; align-items:center;"
+                    onclick="alert('Notification sent to waiting area screen.')">
+                    <div style="font-size: 2.2rem; color: rgba(255,255,255,0.9);">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h4 style="color: white; margin-bottom: 4px; font-size:1.1rem;">Announce Delay</h4>
+                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">Notify waiting patients about a
+                            10m delay.</p>
+                    </div>
+                </div>
+            </aside>
         </div>
-    </div>
+
+    </main>
 
     <!-- Scripts -->
     <script src="../js/api.js"></script>
-    <script src="../js/main.js"></script>
+    <script src="../js/system.js"></script>
     <script>
-        renderSidebar('dashboard');
-        
-        setInterval(() => initDashboard(), 10000); // Feature 11: Auto refresh every 10s
-
-        function announceDelay() {
-            alert("PA System Integration: 'Doctor is experiencing a slight delay. Thank you for your patience.'");
+        // Trigger Emergency Wrapper
+        function triggerEmergency() {
+            alert("EMERGENCY ALERT TRIGGERED! \n\nCritical patient manually escalated via UI.");
+            document.body.style.borderTop = "4px solid var(--danger)";
         }
 
-        function toggleEmergency() {
-            alert("Emergency Mode Activated. High-risk patients will be prioritized automatically.");
-            document.body.style.borderTop = "5px solid var(--danger)";
-        }
+        // Live API Dashboard Controller
+        const ApiDashboard = {
+            render: async function () {
+                try {
+                    const queue = await API.getQueue();
+                    const stats = await API.getStats();
 
-        async function initDashboard() {
-            try {
-                // Stats
-                const stats = await api.getStats();
-                document.getElementById('statTotal').innerText = stats.total_appointments;
-                document.getElementById('statWaiting').innerText = stats.patients_waiting;
-                document.getElementById('statEmergency').innerText = stats.emergency_count;
-                document.getElementById('statAvg').innerText = stats.avg_consult_time;
-    
-                // Shift
-                const completed = stats.total_appointments - stats.patients_waiting;
-                const pct = stats.total_appointments === 0 ? 0 : (completed / stats.total_appointments) * 100;
-                document.getElementById('shiftText').innerText = `${completed} / ${stats.total_appointments}`;
-                document.getElementById('shiftBar').style.width = `${pct}%`;
-    
-                // Queue
-                const queue = await api.getQueue();
-                const tbody = document.querySelector('#queueTable tbody');
-                tbody.innerHTML = '';
-                
-                let activePatient = null;
-    
-                queue.forEach(q => {
-                    const statusLower = q.status.toLowerCase();
-                    const isEmergency = q.type === 'Emergency';
-                    if(statusLower === 'in-consultation') activePatient = q;
-    
-                    tbody.innerHTML += `
-                        <tr style="${isEmergency ? 'background: #fff1f2;' : ''}">
-                            <td><strong style="color:var(--primary); font-size:1.2rem;">#${q.token_number || '-'}</strong> ${isEmergency ? '<span class="badge badge-danger" style="font-size:0.6rem; vertical-align:middle; margin-left:5px;">URGENT</span>' : ''}</td>
-                            <td>
-                                <div style="font-weight:600; font-size:1.1rem; color:var(--text-main);">${q.patient_name}</div>
-                                <div style="font-size:0.85rem; color:var(--text-muted);"><i class="fa-solid fa-notes-medical"></i> Reason: ${q.reason || 'General'}</div>
-                            </td>
-                            <td><span class="badge ${isEmergency ? 'badge-danger' : 'badge-low'}">${isEmergency ? 'EMERGENCY' : 'Normal'}</span></td>
-                            <td><span class="badge badge-${statusLower}">${q.status}</span></td>
-                            <td>
-                                ${statusLower !== 'in-consultation' ? `<button class="btn btn-sm btn-primary" onclick="callNext('${q.id}')">Call Wait</button>` : ''}
-                                ${statusLower === 'in-consultation' ? `<button class="btn btn-sm btn-success" onclick="completeAppt('${q.id}')">Complete</button>` : ''}
-                            </td>
-                        </tr>
-                    `;
-                });
-    
-                // Active Consultation Panel
-                const panel = document.getElementById('currentPanel');
-                if(activePatient) {
-                    const p = activePatient.patient_details;
-                    const v = activePatient.vitals || { bp: '120/80', temp: '98.6', weight: '70' };
-                    panel.innerHTML = `
-                        <div class="flex-between mb-4">
-                            <div>
-                                <h2 style="margin-bottom:5px;">${activePatient.patient_name}</h2>
-                                <span class="badge badge-consultation">Token #${activePatient.token_number || '-'}</span>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Last Visit</div>
-                                <strong style="color:var(--primary);">${p.last_visit ? new Date(p.last_visit).toLocaleDateString() : 'First Visit'}</strong>
-                            </div>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.7); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);">
-                            <span class="text-danger" style="font-weight:700; font-size:0.75rem; text-transform:uppercase;"><i class="fa-solid fa-triangle-exclamation"></i> Primary Complaint</span>
-                            <p style="font-size: 1.15rem; margin-top:5px; color:var(--text-main); font-weight:500;">"${activePatient.complaint || 'N/A'}"</p>
-                        </div>
-    
-                        <div class="grid-3 mb-4" style="background:white; padding:1rem; border-radius:12px; border:1px solid rgba(0,0,0,0.05);">
-                            <div style="text-align:center;"><div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Blood Pressure</div><strong style="font-size:1.1rem; color:var(--text-main);">${v.bp}</strong></div>
-                            <div style="text-align:center; border-left:1px solid var(--glass-border); border-right:1px solid var(--glass-border);"><div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Temp</div><strong style="font-size:1.1rem; color:var(--text-main);">${v.temp}°F</strong></div>
-                            <div style="text-align:center;"><div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Weight</div><strong style="font-size:1.1rem; color:var(--text-main);">${v.weight}kg</strong></div>
-                        </div>
-    
-                        <button class="btn btn-primary" style="width:100%; justify-content:center; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);" onclick="completeAppt('${activePatient.id}')"><i class="fa-solid fa-check-double"></i> Complete Consultation</button>
-                    `;
-                } else {
-                    panel.innerHTML = '<p class="text-muted text-center" style="padding:2rem;"><i class="fa-solid fa-stethoscope" style="font-size:3rem; opacity:0.2; margin-bottom:1rem; display:block;"></i>No active consultation.</p>';
+                    // Advanced Stats Tracking
+                    document.getElementById('stat-total').textContent = stats.total_appointments;
+                    document.getElementById('stat-waiting').textContent = stats.patients_waiting;
+                    document.getElementById('stat-emergency').textContent = stats.emergency_count;
+                    
+                    document.getElementById('waitingCountBadge').textContent = stats.patients_waiting;
+                    document.getElementById('plannedCounter').textContent = queue.length;
+                    // Mocking done for now as endpoint doesnt return it directly in stats
+                    const doneCount = 0; 
+                    document.getElementById('doneCountBadge').textContent = doneCount;
+
+                    // Fake Progress Setup
+                    const pct = stats.total_appointments === 0 ? 0 : (doneCount / stats.total_appointments) * 100;
+                    document.getElementById('shiftBar').style.width = `${pct}%`;
+                    document.getElementById('shiftText').innerText = `${doneCount} / ${stats.total_appointments} completed`;
+
+                    // Filter actively waiting list
+                    const waitingListArr = queue.filter(p => !['Completed', 'completed', 'Skipped'].includes(p.status));
+                    let activeP = queue.find(p => p.status === 'In-Consultation');
+                    let nextP = activeP || waitingListArr[0];
+
+                    const npCard = document.getElementById('next-patient-card');
+                    if (nextP && npCard) {
+                        document.getElementById('np-name').textContent = nextP.patient_name;
+                        document.getElementById('np-token').textContent = `Token #${nextP.token_number}`;
+                        document.getElementById('np-complaint').textContent = nextP.reason || 'General Appt';
+                        document.getElementById('np-last-visit').textContent = 'Live DB Sync';
+
+                        // Check System Risk
+                        let risk = System.Risk.evaluate({age: nextP.age, type: nextP.type});
+                        const riskBadge = document.getElementById('np-risk');
+                        riskBadge.textContent = `${risk.level} Risk`;
+                        riskBadge.className = `badge`;
+                        riskBadge.style.background = risk.color === 'danger' ? 'rgba(239, 68, 68, 0.1)' : (risk.color === 'warning' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)');
+                        riskBadge.style.color = `var(--${risk.color})`;
+
+                        // Toggles
+                        if(activeP) {
+                            document.getElementById('np-status-text').textContent = 'Consultation Active';
+                            document.getElementById('np-status-text').style.color = 'var(--success)';
+                            document.getElementById('btn-call-next').style.display = 'none';
+                            document.getElementById('btn-open-file').style.display = 'flex';
+                            
+                            // Save current patient object in local storage for Prescription page
+                            localStorage.setItem('active_consultation_id', activeP.id);
+                            localStorage.setItem('active_patient_id', activeP.patient_id);
+                        } else {
+                            document.getElementById('np-status-text').textContent = 'Waiting to be called';
+                            document.getElementById('np-status-text').style.color = 'var(--accent)';
+                            document.getElementById('btn-call-next').style.display = 'flex';
+                            document.getElementById('btn-open-file').style.display = 'none';
+                            // Wire the Call Next Button
+                            document.getElementById('btn-call-next').onclick = async () => {
+                                await API.callNext(nextP.id);
+                                ApiDashboard.render();
+                            };
+                        }
+
+                    } else {
+                        document.getElementById('np-name').textContent = "No Active Patients";
+                        document.getElementById('np-token').textContent = "--";
+                        document.getElementById('np-complaint').textContent = "Queue is empty";
+                        document.getElementById('np-status-text').textContent = '-';
+                        document.getElementById('btn-call-next').style.display = 'none';
+                        document.getElementById('btn-open-file').style.display = 'none';
+                    }
+
+                    // Render Queue List
+                    const listEl = document.getElementById('queue-list-container');
+                    listEl.innerHTML = '';
+                    const displayList = waitingListArr.filter(p => p.status !== 'In-Consultation').slice(0, 5);
+
+                    if (displayList.length === 0) {
+                        listEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 50px 20px; background:white; border-radius:12px; border:1px solid var(--border);">No patients waiting.</div>';
+                    } else {
+                        displayList.forEach((p, idx) => {
+                            const h = 9 + Math.floor(p.token_number / 4);
+                            const m = (p.token_number % 4) * 15;
+                            const timeStr = `${h < 10 ? '0'+h : h}:${m === 0 ? '00' : m} AM`;
+
+                            listEl.innerHTML += `
+                                <div class="queue-item slide-up" style="cursor:pointer; animation-delay: ${idx * 0.1}s">
+                                    <div class="q-info">
+                                        <div class="q-token" style="${p.type === 'Emergency' ? 'background:rgba(239, 68, 68, 0.1); color:var(--danger); border-color:rgba(239, 68, 68, 0.2);' : ''}">${p.token_number}</div>
+                                        <div class="q-details">
+                                            <h4>${p.patient_name}</h4>
+                                            <p><i class="fa-regular fa-clock"></i> ${timeStr}</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge ${p.type === 'Emergency' ? 'badge-emergency' : 'badge-waiting'}">${p.type}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                } catch(error) {
+                    console.error("Dashboard Render Error:", error);
                 }
-            } catch (err) {
-                console.error("Dashboard init error:", err);
             }
-        }
-    
-        async function callNext(id) {
-            await api.callNextPatient(id);
-            initDashboard();
-        }
+        };
 
-        async function completeAppt(id) {
-            const notes = prompt("Enter Prescription / Notes:");
-            if (notes) await api.prescribe(id, notes);
-            await api.callNextPatient(id); // Using callNext to advance or just mark complete
-            initDashboard();
-        }
-
-        initDashboard();
+        window.addEventListener('API_READY', () => {
+            ApiDashboard.render();
+            setInterval(() => ApiDashboard.render(), 10000);
+        });
     </script>
 </body>
 </html>

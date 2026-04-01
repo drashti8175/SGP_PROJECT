@@ -31,12 +31,23 @@ router.get('/doctors', async (req, res) => {
 // 2. Book Appointment (Queue-based)
 router.post('/book', async (req, res) => {
     try {
-        const { doctor_id, reason_for_visit, type } = req.body;
+        const { doctor_id, reason_for_visit, type, patient_name, phone, gender, blood_group } = req.body;
         if (!doctor_id || !reason_for_visit) return res.status(400).json({ error: "Doctor and Reason for Visit are required." });
+
+        const User = require('../models/User');
+
+        // Update patient profile with details entered during booking
+        const updateData = {};
+        if (patient_name && patient_name.trim()) updateData.name = patient_name.trim();
+        if (phone) updateData.phone = phone;
+        if (gender) updateData.gender = gender;
+        if (blood_group) updateData.blood_group = blood_group;
+        if (Object.keys(updateData).length > 0) {
+            await User.findByIdAndUpdate(req.userId, updateData);
+        }
 
         const today = new Date().toISOString().split('T')[0];
 
-        // Generate Token Number (incremental per doctor per day)
         const count = await Appointment.countDocuments({ doctor_id, date: today });
         const token_number = count + 1;
 
@@ -47,7 +58,7 @@ router.post('/book', async (req, res) => {
             token_number,
             reason_for_visit,
             type: type || 'Normal',
-            status: 'Waiting'
+            status: 'pending'
         });
 
         const io = req.app.get('io');
@@ -82,7 +93,10 @@ router.get('/appointments', async (req, res) => {
             payment_status: a.payment_status,
             doctor_name: (a.doctor_id && a.doctor_id.userId) ? a.doctor_id.userId.name : 'Unknown',
             specialty: a.doctor_id ? a.doctor_id.specialization : 'Unknown',
-            reason_for_visit: a.reason_for_visit
+            reason_for_visit: a.reason_for_visit,
+            rejection_reason: a.rejection_reason || '',
+            token_number: a.token_number,
+            type: a.type
         }));
 
         res.json(results);

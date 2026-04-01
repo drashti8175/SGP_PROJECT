@@ -5,62 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - CareConnect</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar glass-panel" id="sidebar-container"></div>
-        
-        <div class="main-content">
-            <div class="flex-between mb-4">
-                <div>
-                    <h1 id="welcomeText">Welcome back!</h1>
-                    <p class="text-muted">Here is your healthcare overview</p>
+    <div class="sidebar" id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1 id="welcomeText">Welcome back!</h1>
+                <p>Here is your healthcare overview</p>
+            </div>
+            <div class="header-actions">
+                <div class="time-display">
+                    <i class="fa-regular fa-clock" style="color:var(--text-muted)"></i>
+                    <span id="currentTime">--:--</span>
                 </div>
-                <div style="font-size: 2rem; color: var(--primary);">
-                    <i class="fa-solid fa-circle-user"></i>
+                <button class="icon-btn notification-badge"><i class="fa-regular fa-bell"></i></button>
+            </div>
+        </div>
+
+        <div class="card-grid">
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> Live</div>
+                </div>
+                <div class="stat-value" id="statActive">0</div>
+                <div class="stat-label">Upcoming Appointments</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--accent);"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                    <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> Total</div>
+                </div>
+                <div class="stat-value" id="statRx">0</div>
+                <div class="stat-label">Prescriptions Issued</div>
+            </div>
+            <div class="card stat-card" style="background: var(--accent); color: white; border-color: var(--accent);">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white;"><i class="fa-solid fa-plus"></i></div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">Need a Doctor?</h3>
+                    <a href="booking.html" class="btn bg-white text-dark" style="width: 100%; text-decoration: none;"><i class="fa-solid fa-calendar-plus"></i> Book Now</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-layout">
+            <div class="layout-section">
+                <div class="section-header">
+                    <h2 class="section-title">Today's Appointment Status</h2>
+                    <a href="queue.html" class="btn-outline btn" style="padding: 6px 14px; font-size: 0.85rem; text-decoration:none;">Live Queue</a>
+                </div>
+                <div class="card patient-card" id="upcomingAppt" style="padding: 32px;">
+                    <div class="text-center">
+                        <p class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Checking upcoming appointments...</p>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 24px;">
+                    <h2 class="section-title">Recent Prescriptions</h2>
+                    <a href="prescriptions.html" class="btn-outline btn" style="padding: 6px 14px; font-size: 0.85rem; text-decoration:none;">View All</a>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Doctor</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentPrescriptions">
+                            <tr><td colspan="3" class="text-center text-muted" style="padding: 24px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="grid-2 mb-4">
-                <div class="glass-panel card">
-                    <h2 class="mb-2"><i class="fa-regular fa-calendar-check text-success"></i> Upcoming Appointment</h2>
-                    <div id="upcomingAppt">
-                        <p class="text-muted">Loading...</p>
-                    </div>
+            <div class="layout-section">
+                <div class="section-header">
+                    <h2 class="section-title">Health Highlights</h2>
                 </div>
-                <div class="glass-panel card" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white;">
-                    <h2 class="mb-2" style="color: white;"><i class="fa-solid fa-notes-medical"></i> Quick Actions</h2>
-                    <div class="grid-2 mt-2">
-                        <a href="booking.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
-                            <i class="fa-solid fa-plus"></i> New Booking
-                        </a>
-                        <a href="queue.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
-                            <i class="fa-solid fa-list-ol"></i> Track Queue
-                        </a>
-                        <a href="prescriptions.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
-                            <i class="fa-solid fa-pills"></i> My Medicines
-                        </a>
-                        <a href="profile.html" class="btn-primary" style="background: rgba(255,255,255,0.2); color: white;">
-                            <i class="fa-solid fa-gear"></i> Settings
-                        </a>
-                    </div>
+                <div class="card">
+                    <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 12px;"><i class="fa-solid fa-shield-virus text-success"></i> Smart Protection</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; line-height: 1.5;">MediCore's AI system constantly checks your active prescriptions against new bookings to prevent adverse drug interactions.</p>
+                    <div class="badge badge-checkin" style="display: inline-block; margin-top: 12px;"><i class="fa-solid fa-check-circle"></i> Profile Safe</div>
                 </div>
-            </div>
-            
-            <h2 class="mb-2 mt-4">Recent Prescriptions</h2>
-            <div class="glass-panel card p-0">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Doctor</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentPrescriptions">
-                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
-                    </tbody>
-                </table>
+                <div class="card mt-4">
+                    <h3 style="font-size: 1.1rem; color: var(--dark); margin-bottom: 12px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent)"></i> Vitals Tracking</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; line-height: 1.5;">During your appointments, the doctor's dashboard will simulate tracking your HR, SpO2, and BP in real-time.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -71,53 +108,83 @@
         const patientId = checkAuth();
         renderSidebar('dashboard');
         
-        document.getElementById('welcomeText').innerText = `Welcome back, ${localStorage.getItem('careconnect_name')}!`;
+        function updateTime() {
+            const timeSpan = document.getElementById('currentTime');
+            if (timeSpan) {
+                const now = new Date();
+                timeSpan.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+        }
+        setInterval(updateTime, 60000);
+        updateTime();
+
+        document.getElementById('welcomeText').innerText = `Welcome back, ${localStorage.getItem('careconnect_name') || 'Patient'}!`;
 
         async function loadDashboard() {
             try {
                 // Appointments
                 const appts = await api.getAppointments();
-                const active = appts.find(a => a.status === 'Waiting' || a.status === 'In-Consultation');
+                let activeCount = 0;
+                let activeAppt = null;
+
+                if (appts && appts.length > 0) {
+                    activeAppt = appts.find(a => a.status === 'Waiting' || a.status === 'In-Consultation');
+                    activeCount = appts.filter(a => a.status === 'Waiting' || a.status === 'In-Consultation').length;
+                }
+                
+                document.getElementById('statActive').innerText = activeCount;
+
                 const apptDiv = document.getElementById('upcomingAppt');
                 
-                if (active) {
-                    // Fetch real-time queue details
-                    const q = await api.getQueueStatus(active.doctorId || active.doctor_id?._id);
-                    
+                if (activeAppt) {
+                    const qData = await api.getQueueStatus(activeAppt.doctorId || activeAppt.doctor_id?._id || activeAppt.doctor_id);
+                    // Use new patient-card styles
                     apptDiv.innerHTML = `
-                        <div class="flex-between">
-                            <div>
-                                <p><strong>Dr. ${active.doctor_name}</strong></p>
-                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -4px; margin-bottom: 8px;">Reason: ${q.reason_for_visit || active.reason_for_visit || 'General'}</p>
-                                <span class="badge ${active.status === 'In-Consultation' ? 'badge-primary' : 'badge-warning'}">${active.status}</span>
+                        <div class="patient-info-large" style="margin: 0;">
+                            <div class="patient-avatar-large" style="background: rgba(14,165,233,0.1); color: var(--accent);">
+                                <i class="fa-solid fa-user-doctor"></i>
                             </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOKEN</div>
-                                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">#${q.token_number || active.token_number || '-'}</div>
+                            <div class="patient-details" style="flex:1;">
+                                <h3 style="margin-bottom: 2px;">Dr. ${activeAppt.doctor_name}</h3>
+                                <div class="patient-meta">
+                                    <span><i class="fa-solid fa-stethoscope"></i> ${activeAppt.specialty || 'General'}</span>
+                                    <span><i class="fa-regular fa-calendar"></i> Today</span>
+                                </div>
+                                <div class="complaint-badge" style="background: rgba(245,158,11,0.1); color: var(--warning); margin-top:8px;">
+                                    ${activeAppt.status}
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="grid-2 mt-4" style="background: rgba(255,255,255,0.5); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
-                            <div class="text-center">
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">QUEUE POSITION</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">${q.queue_position || '-'}</div>
-                            </div>
-                            <div class="text-center" style="border-left: 1px solid var(--glass-border);">
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">EST. WAIT TIME</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);">${q.estimated_wait_time_mins || 0} mins</div>
+                            <div style="text-align: right; border-left: 1px solid var(--border); padding-left: 20px;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">YOUR TOKEN</div>
+                                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height:1;">#${qData.token_number || activeAppt.token_number || '-'}</div>
                             </div>
                         </div>
-                        
-                        <div class="text-center mt-3">
-                            <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-people-arrows"></i> <strong>${q.patients_ahead || 0}</strong> people ahead of you</p>
+
+                        <div style="display: flex; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                            <div style="flex: 1; text-align: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">QUEUE POSITION</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--dark);">${qData.queue_position || '-'}</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 1px solid var(--border);">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">EST. WAIT TIME</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${qData.estimated_wait_time_mins || 0} mins</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 1px solid var(--border);">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">AHEAD OF YOU</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);">${qData.patients_ahead || 0}</div>
+                            </div>
                         </div>
                     `;
                 } else {
                     apptDiv.innerHTML = `
-                        <p class="text-muted mb-4">You don't have any active appointments today.</p>
-                        <a href="booking.html" class="btn-primary" style="justify-content: center; width: 100%;">
-                            <i class="fa-solid fa-calendar-plus"></i> Book Your Spot in Queue
-                        </a>
+                        <div class="text-center" style="padding: 24px 0;">
+                            <div style="font-size: 3rem; color: var(--border); margin-bottom: 16px;"><i class="fa-regular fa-calendar-xmark"></i></div>
+                            <h3 style="color: var(--dark); margin-bottom: 8px;">No Active Appointments</h3>
+                            <p class="text-muted" style="margin-bottom: 24px;">You don't have any appointments scheduled for today.</p>
+                            <a href="booking.html" class="btn btn-primary" style="display: inline-flex; width: auto; text-decoration: none;">
+                                <i class="fa-solid fa-calendar-plus"></i> Book an Appointment
+                            </a>
+                        </div>
                     `;
                 }
 
@@ -125,18 +192,21 @@
                 const rx = await api.getPrescriptions();
                 const rxTbody = document.getElementById('recentPrescriptions');
                 if (!rx || rx.length === 0) {
-                    rxTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No recent prescriptions</td></tr>';
+                    document.getElementById('statRx').innerText = 0;
+                    rxTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted" style="padding: 24px;">No recent prescriptions found</td></tr>';
                 } else {
+                    document.getElementById('statRx').innerText = rx.length;
                     rxTbody.innerHTML = rx.slice(0, 3).map(p => `
                         <tr>
-                            <td>${new Date(p.created_at || p.date).toLocaleDateString()}</td>
+                            <td style="font-weight: 500;">${new Date(p.created_at || p.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</td>
                             <td>Dr. ${p.doctor_name}</td>
-                            <td><a href="prescriptions.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">View Details</a></td>
+                            <td><a href="prescriptions.html" style="color: var(--accent); text-decoration: none; font-weight: 600; display:flex; align-items:center; gap:6px;">View <i class="fa-solid fa-arrow-right" style="font-size:0.8rem;"></i></a></td>
                         </tr>
                     `).join('');
                 }
             } catch (err) {
                 console.error("Dashboard error:", err);
+                document.getElementById('upcomingAppt').innerHTML = '<p class="text-danger text-center"><i class="fa-solid fa-circle-exclamation"></i> Error loading dashboard data.</p>';
             }
         }
         

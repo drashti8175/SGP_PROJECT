@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications | Doctor Module</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS (Fixed Link Path) -->
+    <link rel="stylesheet" href="../css/style.css">
+    
+    <style>
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .notif-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: start;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .notif-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .notif-card.unread::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 10px;
+            height: 10px;
+            background: var(--danger);
+            border-radius: 50%;
+        }
+
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .notif-content h4 {
+            color: var(--dark);
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+
+        .notif-content p {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .notif-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        
+        /* Layout Adjustments to match app structure */
+        .sidebar { width: 260px; background: var(--card-bg); border-right: 1px solid var(--border); padding: 1.5rem; display: flex; flex-direction: column; }
+        .main-content { flex: 1; padding: 2rem; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; overflow-x: hidden; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title h1 { margin: 0; font-size: 1.8rem; color: var(--dark); }
+        .page-title p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.95rem; }
+    </style>
+</head>
+
+<body>
+    
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand"><i class="fa-solid fa-user-doctor"></i><span style="margin-left:8px;">MediCore</span></div>
+            <ul class="nav-links">
+                <li><a href="doctor_dashboard.html" class="nav-item"><i
+                            class="fa-solid fa-grid-2"></i><span>Dashboard</span></a></li>
+                <li><a href="queue_management.html" class="nav-item"><i
+                            class="fa-solid fa-users-line"></i><span>Queue</span></a></li>
+                <li><a href="patient_details.html" class="nav-item"><i class="fa-solid fa-hospital-user"></i><span>Patient
+                            Details</span></a></li>
+                <li><a href="ai_assist.html" class="nav-item"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI
+                            Assist</span></a></li>
+                <li><a href="doctor_reports.html" class="nav-item"><i
+                            class="fa-solid fa-chart-pie"></i><span>Reports</span></a></li>
+                <li><a href="doctor_notifications.html" class="nav-item active"><i
+                            class="fa-solid fa-bell"></i><span>Notifications</span></a></li>
+            </ul>
+            <div class="user-profile" style="margin-top:auto;" onclick="window.location.href='doctor_profile.html'">
+                <div class="avatar" style="width:40px; height:40px;"><span>DR</span></div>
+                <div class="user-info">
+                    <h4 style="margin:0; font-size:14px;">Dr. Rashmi</h4>
+                    <p style="margin:0; font-size:12px; color:var(--text-muted);">Cardiologist</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="header">
+                <div class="page-title">
+                    <h1>Notifications</h1>
+                    <p>System alerts and updates</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" style="border-color:var(--text-muted);" onclick="clearNotifications()">
+                        <i class="fa-solid fa-trash"></i> Clear All
+                    </button>
+                </div>
+            </header>
+
+            <div class="notif-list" id="notif-container">
+                <!-- Populated via JS -->
+                <div style="text-align: center; color: var(--text-muted); padding: 40px;">Loading...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts (Fixed Paths) -->
+    <script src="../js/system.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNotifications();
+        });
+
+        function renderNotifications() {
+            // Check System.js wrapper first, fallback to raw localStorage
+            let notifs = [];
+            if(typeof System !== 'undefined' && System.getNotifications) {
+                notifs = System.getNotifications();
+            } else {
+                notifs = JSON.parse(localStorage.getItem('doc_notifications')) || [];
+            }
+            
+            const container = document.getElementById('notif-container');
+            container.innerHTML = '';
+
+            if (notifs.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 60px;">
+                        <i class="fa-regular fa-bell-slash" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3>All Caught Up!</h3>
+                        <p>No new notifications to display.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Reverse for newest first
+            notifs.slice().reverse().forEach((n, index) => {
+                let iconClass = 'fa-circle-info';
+                let bgStyle = 'background: #e0f2fe; color: #0284c7;'; // Info
+
+                const typeLower = (n.type || '').toLowerCase();
+                
+                if (typeLower === 'success') {
+                    iconClass = 'fa-circle-check';
+                    bgStyle = 'background: #dcfce7; color: #16a34a;';
+                } else if (typeLower === 'warning' || typeLower === 'danger' || typeLower === 'emergency') {
+                    iconClass = 'fa-triangle-exclamation';
+                    bgStyle = 'background: #fee2e2; color: #dc2626;';
+                }
+
+                const timeStr = new Date(n.timestamp || n.time || Date.now()).toLocaleString();
+                const msg = n.message || n.msg || 'System updated.';
+
+                const html = `
+                    <div class="notif-card slide-up ${index < 3 ? 'unread' : ''}" style="animation-duration: 0.3s; animation-delay: ${index * 0.05}s; animation-fill-mode: both;">
+                        <div class="notif-icon" style="${bgStyle}">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div class="notif-content">
+                            <h4>${(n.type || 'info').toUpperCase()}</h4>
+                            <p>${msg}</p>
+                            <span class="notif-time"><i class="fa-regular fa-clock"></i> ${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function clearNotifications() {
+            if (confirm('Clear all system alerts and notifications?')) {
+                localStorage.setItem('doc_notifications', JSON.stringify([]));
+                renderNotifications();
+            }
+        }
+    </script>
+</body>
+
+</html>

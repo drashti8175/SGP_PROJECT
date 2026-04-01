@@ -7,15 +7,21 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar glass-panel" id="sidebar-container"></div>
-        
-        <div class="main-content">
-            <h1 class="mb-4">Notifications</h1>
-
-            <div class="glass-panel card flex-column gap-2" id="notifContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-                <!-- Notifications load here -->
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1>Notifications</h1>
+                <p>Stay updated on your health alerts</p>
             </div>
+            <div class="header-actions">
+                <button class="icon-btn notification-badge"><i class="fa-solid fa-bell"></i></button>
+            </div>
+        </div>
+
+        <div id="notifContainer" style="display: flex; flex-direction: column; gap: 16px; max-width: 800px;">
+            <!-- Notifications load here -->
         </div>
     </div>
 
@@ -27,25 +33,32 @@
 
         async function loadNotifications() {
             try {
+                // Use getAppointments or other route if getNotifications is missing server-side logic, 
+                // but since this is existing code, I assume getNotifications works or fails gracefully.
                 const notifs = await api.getNotifications(patientId);
                 const container = document.getElementById('notifContainer');
                 
-                if (notifs.length === 0) {
-                    container.innerHTML = '<p class="text-muted text-center">You have no new notifications.</p>';
+                if (!notifs || notifs.length === 0) {
+                    container.innerHTML = '<div class="card text-center"><p class="text-muted" style="padding: 24px;">You have no new notifications.</p></div>';
                     return;
                 }
                 
                 container.innerHTML = notifs.map(n => `
-                    <div style="padding: 1rem; border-left: 4px solid var(--primary); background: rgba(255,255,255,0.7); border-radius: 8px;">
-                        <div class="flex-between">
-                            <strong>${n.type.toUpperCase()}</strong>
-                            <small class="text-muted">${new Date(n.timestamp).toLocaleString()}</small>
+                    <div class="card" style="border-left: 4px solid var(--accent); display: flex; align-items: flex-start; gap: 16px; padding: 20px;">
+                        <div style="background: rgba(14, 165, 233, 0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-bell"></i>
                         </div>
-                        <p class="mt-2 text-muted">${n.message}</p>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <strong style="color: var(--dark); font-size: 1.05rem;">${n.type ? n.type.toUpperCase() : 'ALERT'}</strong>
+                                <small class="text-muted" style="font-weight: 500;">${new Date(n.timestamp).toLocaleString()}</small>
+                            </div>
+                            <p class="text-muted" style="line-height: 1.5; font-size: 0.95rem;">${n.message}</p>
+                        </div>
                     </div>
                 `).join('');
             } catch (err) {
-                document.getElementById('notifContainer').innerHTML = '<p class="text-danger">Failed to load notifications.</p>';
+                document.getElementById('notifContainer').innerHTML = '<div class="card text-center text-danger" style="padding: 24px;">Failed to load notifications.</div>';
             }
         }
 

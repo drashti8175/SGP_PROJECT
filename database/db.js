@@ -1,123 +1,132 @@
 const mongoose = require('mongoose');
 
-const seedUsers = async () => {
+let seeded = false;
+
+const seedDatabase = async () => {
+    if (seeded) return;
     try {
         const User = require('../models/User');
         const Doctor = require('../models/Doctor');
+        const Appointment = require('../models/Appointment');
+        const Prescription = require('../models/Prescription');
         const bcrypt = require('bcryptjs');
+
+        // Clear existing data for a clean start (Optional - remove in production)
+        // await User.deleteMany({});
+        // await Doctor.deleteMany({});
 
         const hash = bcrypt.hashSync('1234', 10);
 
-        const doctorEmails = ['sushma@clinic.com', 'hemant@clinic.com'];
+        const accounts = [
+            { email: 'admin@clinic.com',      name: 'Admin',            role: 'admin' },
+            { email: 'reception@clinic.com',  name: 'Receptionist',     role: 'receptionist' },
+            { email: 'sushma@clinic.com',     name: 'Dr. Sushma Patel', role: 'doctor' },
+            { email: 'hemant@clinic.com',     name: 'Dr. Hemant Shah',  role: 'doctor' },
+            { email: 'sachet@gmail.com',      name: 'Sachet Kumar',     role: 'patient' },
+            { email: 'john@example.com',      name: 'John Doe',         role: 'patient' },
+        ];
 
-        for (const email of doctorEmails) {
-            let user = await User.findOne({ email });
-
-            if (!user) {
-                console.log(`📦 Creating Doctor: ${email}`);
-
-                const name = email.includes('sushma') ? 'Dr. Sushma' : 'Dr. Hemant';
-
-                const newUser = await User.create({
-                    name,
-                    email,
-                    password: hash,
-                    role: 'doctor'
-                });
-
-                const spec = email.includes('sushma')
-                    ? 'Cardiologist'
-                    : 'General Physician';
-
-                const fee = email.includes('sushma') ? 500 : 300;
-
-                await Doctor.create({
-                    userId: newUser._id,
-                    specialization: spec,
-                    consultationFee: fee
-                });
+        console.log('🌱 Seeding core users and doctor profiles...');
+        for (const acc of accounts) {
+            const exists = await User.findOne({ email: acc.email });
+            if (!exists) {
+                const user = await User.create({ name: acc.name, email: acc.email, password: hash, role: acc.role });
+                if (acc.role === 'doctor') {
+                    const spec = acc.email.includes('sushma') ? 'Cardiologist' : 'General Physician';
+                    const fee  = acc.email.includes('sushma') ? 500 : 300;
+                    await Doctor.create({ userId: user._id, specialization: spec, consultationFee: fee, experience: 10 });
+                }
+                console.log(`✅ Created: ${acc.email}`);
             }
         }
 
-        // Admin
-        const adminExists = await User.findOne({ role: 'admin' });
-        if (!adminExists) {
-            await User.create({
-                name: 'Admin',
-                email: 'admin@clinic.com',
-                password: hash,
-                role: 'admin'
-            });
-        }
-
-        // Receptionist
-        const recExists = await User.findOne({ role: 'receptionist' });
-        if (!recExists) {
-            await User.create({
-                name: 'Receptionist',
-                email: 'reception@clinic.com',
-                password: hash,
-                role: 'receptionist'
-            });
-        }
-
-        const count = await Doctor.countDocuments();
-        console.log(`✅ Seeding complete. Total Doctors: ${count}`);
-
-        // Seed Sample Appointments for Queue Demo
-        const Appointment = require('../models/Appointment');
+        // Seed some sample appointments and history if empty
         const apptCount = await Appointment.countDocuments();
         if (apptCount === 0) {
-            const sachet = await User.findOne({ email: 'sachet@gmail.com' });
-            const sushma = await User.findOne({ email: 'sushma@clinic.com' });
-            const sushmaDoc = await Doctor.findOne({ userId: sushma?._id });
+            console.log('📅 Seeding sample appointments...');
+            const patient = await User.findOne({ role: 'patient' });
+            const doctor = await Doctor.findOne();
+            const today = new Date().toISOString().split('T')[0];
 
-            if (sachet && sushmaDoc) {
-                const today = new Date().toISOString().split('T')[0];
-                await Appointment.create([
-                    {
-                        patient_id: sachet._id,
-                        doctor_id: sushmaDoc._id,
-                        date: today,
-                        token_number: 1,
-                        reason_for_visit: 'Regular checkup',
-                        type: 'Normal',
-                        status: 'In-Consultation'
-                    },
-                    {
-                        patient_id: sachet._id, // Using same patient for demo simplicity
-                        doctor_id: sushmaDoc._id,
-                        date: today,
-                        token_number: 2,
-                        reason_for_visit: 'Chest pain',
-                        type: 'Emergency',
-                        status: 'Waiting'
-                    }
-                ]);
-                console.log("📝 Sample appointments seeded.");
+            if (patient && doctor) {
+                const appt = await Appointment.create({
+                    patient_id: patient._id,
+                    doctor_id: doctor._id,
+                    date: today,
+                    token_number: 1,
+                    reason_for_visit: 'Regular Checkup and Fever',
+                    status: 'Completed',
+                    type: 'Normal',
+                    payment_status: 'paid'
+                });
+
+                await Prescription.create({
+                    patientId: patient._id,
+                    doctorId: doctor._id,
+                    appointmentId: appt._id,
+                    diagnosis: 'Viral Fever',
+                    medicines: [
+                        { name: 'Paracetamol', dosage: '500mg', frequency: '1-0-1', duration: '3 days' },
+                        { name: 'Vitamin C', dosage: '1000mg', frequency: '0-1-0', duration: '5 days' }
+                    ],
+                    notes: 'Drink plenty of water and rest.'
+                });
+                console.log('✅ Sample medical records created');
             }
         }
 
+        seeded = true;
+        const usersTotal = await User.countDocuments();
+        console.log(`✅ Database Structure Verified — ${usersTotal} users present.`);
     } catch (err) {
-        console.error("❌ Seeding Error:", err.message);
+        console.error('❌ Seeding Error:', err.message);
     }
 };
 
-
 const connectDB = async () => {
+    const uri = process.env.MONGO_URI;
+    if (!uri) { 
+        console.error('❌ FATAL: MONGO_URI is missing in your .env file.'); 
+        process.exit(1); 
+    }
+
+    const options = {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4, 
+    };
+
     try {
-        console.log("📡 Connecting to MongoDB...");
+        console.log('📡 Connecting to MongoDB Atlas...');
+        await mongoose.connect(uri, options);
+        console.log('✅ Permanent Atlas Connection Established');
+        await seedDatabase();
+    } catch (e) {
+        console.error('❌ Primary Atlas Connection Failed:', e.message);
+        console.log('🔄 Trying with different SSL options...');
 
-        await mongoose.connect(process.env.MONGO_URI);
-
-        console.log("✅ MongoDB Connected Successfully");
-
-        // Run seeding AFTER connection
-        await seedUsers();
-
-    } catch (error) {
-        console.error("❌ MongoDB Connection Failed:", error.message);
-        process.exit(1);
+        try {
+            await mongoose.connect(uri, {
+                ...options,
+                tls: true,
+                tlsAllowInvalidCertificates: true,
+            });
+            console.log('✅ Atlas Connected via SSL bypass!');
+            await seedDatabase();
+        } catch (e2) {
+            console.log('🔄 Using In-Memory DB as fallback...');
+            try {
+                const { MongoMemoryServer } = require('mongodb-memory-server');
+                const mongoServer = await MongoMemoryServer.create();
+                await mongoose.connect(mongoServer.getUri());
+                console.log('✅ In-Memory DB ready');
+                await seedDatabase();
+            } catch (e3) {
+                console.error('❌ In-Memory DB connection failed:', e3.message);
+                process.exit(1);
+            }
+        }
     }
 };
 

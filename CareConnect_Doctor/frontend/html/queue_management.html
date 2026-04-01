@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Management | Doctor Module</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .queue-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            height: calc(100vh - 140px);
+        }
+
+        .queue-main {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .queue-card-draggable {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.2s;
+            cursor: grab;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .queue-card-draggable:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            background: var(--light);
+        }
+
+        .drag-handle {
+            color: var(--text-muted);
+            cursor: grab;
+            padding: 8px;
+        }
+
+        .token-large {
+            width: 50px;
+            height: 50px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .current-patient-section {
+            background: linear-gradient(135deg, white, var(--bg-color));
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-user-doctor"></i>
+                <span style="margin-left:8px;">MediCore</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="doctor_dashboard.html" class="nav-link"><i
+                            class="fa-solid fa-grid-2"></i><span>Dashboard</span></a></li>
+                <li><a href="queue_management.html" class="nav-link active"><i
+                            class="fa-solid fa-users-line"></i><span>Queue</span></a></li>
+                <li><a href="patient_details.html" class="nav-link"><i class="fa-solid fa-hospital-user"></i><span>Patient
+                            Details</span></a></li>
+                <li><a href="doctor_reports.html" class="nav-link"><i
+                            class="fa-solid fa-chart-pie"></i><span>Reports</span></a></li>
+                <li><a href="doctor_performance.html" class="nav-link"><i class="fa-solid fa-trophy"></i><span>Performance</span></a></li>
+                <li style="margin-top:auto;">
+                    <a href="doctor_profile.html" class="nav-link">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="user-profile" onclick="window.location.href='doctor_profile.html'">
+                <div class="user-avatar"><span>DR</span></div>
+                <div class="user-info">
+                    <h4>Dr. Rashmi</h4>
+                    <p>Cardiologist</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="header">
+                <div class="page-title">
+                    <h1>Queue Management</h1>
+                    <p>Manage patient flow and consultation order.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="time-display" id="realtime-clock" style="font-weight:600;"><i class="fa-regular fa-clock"></i> --:--</div>
+                    <button class="btn btn-primary" onclick="addWalkIn()"><i class="fa-solid fa-plus"></i> Add Walk-in</button>
+                </div>
+            </header>
+
+            <!-- Current Active Patient -->
+            <div id="current-patient-display">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="queue-container">
+                <!-- Left: Queue List -->
+                <div class="queue-main" id="queue-list-full">
+                    <!-- Javascript will populate this -->
+                </div>
+
+                <!-- Right: Queue Stats / Controls -->
+                <div class="layout-section">
+                    <div class="card" style="margin-bottom:16px;">
+                        <h3 class="section-title" style="margin-bottom: 16px;">Queue Insights</h3>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span class="text-muted">Total Waiting</span>
+                            <span class="text-dark" style="font-weight: 600;" id="q-total">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span class="text-muted">Avg Wait Time</span>
+                            <span class="text-dark" style="font-weight: 600;">15 mins</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span class="text-muted">Est. Finish</span>
+                            <span style="color: var(--accent); font-weight: 600;">1:30 PM</span>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2);">
+                        <h3 style="color: var(--danger); margin-bottom: 12px;"><i
+                                class="fa-solid fa-triangle-exclamation"></i> Emergency Slot</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Insert a high-priority
+                            patient at the top of the queue.</p>
+                        <button class="btn btn-primary" style="background:var(--danger); width: 100%; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);"
+                            onclick="addEmergency()">
+                            Add Emergency Patient
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/system.js"></script>
+    <script>
+        // Live API Queue Controller
+        const ApiQueueManager = {
+            render: async function () {
+                try {
+                    const queue = await API.getQueue();
+                    // Find active consultation natively
+                    const current = queue.find(p => p.status === 'In-Consultation');
+
+                    // 1. Current Patient Display
+                    const currentEl = document.getElementById('current-patient-display');
+                    if (current) {
+                        currentEl.innerHTML = `
+                            <div class="current-patient-section">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                    <span class="badge" style="background: rgba(14, 165, 233, 0.1); color: var(--accent); border:1px solid rgba(14, 165, 233, 0.2);"><i class="fa-solid fa-door-open"></i> NOW CONSULTING</span>
+                                    <span style="color: var(--success); font-size: 0.9rem; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Active</span>
+                                </div>
+                                <div class="patient-info-large">
+                                    <div class="patient-avatar-large">
+                                        ${(current.patient_name || "U").charAt(0)}
+                                    </div>
+                                    <div class="patient-details">
+                                        <h3 style="margin:0 0 4px 0; font-size: 1.8rem; color:var(--dark);">${current.patient_name}</h3>
+                                        <p style="color: var(--text-muted); margin:0; font-size:0.95rem;">Token #${current.token_number} &bull; ${current.reason || 'Standard Care'}</p>
+                                    </div>
+                                    <div style="margin-left: auto; display: flex; gap: 12px;">
+                                        <button class="btn btn-outline" onclick="window.location.href='prescription.html'"><i class="fa-solid fa-file-prescription"></i> Open Rx</button>
+                                        <button class="btn btn-primary" onclick="ApiQueueManager.finishConsult('${current.id}')"><i class="fa-solid fa-check"></i> Complete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        currentEl.innerHTML = `
+                            <div class="current-patient-section" style="border: 2px dashed rgba(14, 165, 233, 0.3); opacity: 0.8; background:transparent; box-shadow:none;">
+                                <h3 style="color: var(--text-muted); text-align: center; margin:0;">No Active Consultation</h3>
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button class="btn btn-primary" onclick="ApiQueueManager.next()"><i class="fa-solid fa-user-check"></i> Call Next Patient</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // 2. Waiting List
+                    const listEl = document.getElementById('queue-list-full');
+                    listEl.innerHTML = '';
+
+                    const waiting = queue.filter(p => !['Completed', 'completed', 'Skipped', 'In-Consultation'].includes(p.status));
+                    document.getElementById('q-total').textContent = waiting.length;
+
+                    if (waiting.length === 0) {
+                        listEl.innerHTML = '<div class="card" style="text-align: center; color: var(--text-muted); padding: 50px;">Queue is completely empty. Excellent work!</div>';
+                    }
+
+                    waiting.forEach((p, index) => {
+                        const isEmergency = p.type === 'Emergency' || p.risk_level === 'High';
+                        let riskIndicator = isEmergency ? `<i class="fa-solid fa-triangle-exclamation" style="color: var(--danger); margin-left: 5px;" title="High Risk"></i>` : '';
+
+                        listEl.innerHTML += `
+                            <div class="queue-card-draggable slide-up" style="animation-delay: ${index * 0.1}s">
+                                <div class="token-large" style="${isEmergency ? 'border-color: rgba(239, 68, 68, 0.3); color: var(--danger); background: rgba(239, 68, 68, 0.05);' : ''}">
+                                    ${p.token_number}
+                                </div>
+                                <div style="flex: 1;">
+                                    <h4 style="font-size: 1.1rem; margin:0 0 4px 0; color: var(--dark);">
+                                        ${p.patient_name} ${riskIndicator}
+                                        ${isEmergency ? '<span class="badge badge-emergency" style="margin-left: 8px;">EMERGENCY</span>' : ''}
+                                    </h4>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-top:6px;">
+                                        <span><i class="fa-solid fa-venus-mars"></i> ${p.gender || 'U'}, ${p.age || '30'}y</span>
+                                        <span><i class="fa-solid fa-file-medical"></i> ${p.reason || 'General'}</span>
+                                    </div>
+                                </div>
+                                <div class="actions">
+                                    <button class="btn btn-outline" style="padding:8px 14px;" onclick="ApiQueueManager.callSpecific('${p.id}')" title="Call Now"><i class="fa-solid fa-person-walking-arrow-right"></i> Call</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } catch(error) {
+                    console.error("Queue Render Error:", error);
+                }
+            },
+
+            // Actions
+            next: async function () {
+                const queue = await API.getQueue();
+                const waitingListArr = queue.filter(p => !['Completed', 'completed', 'Skipped', 'In-Consultation'].includes(p.status));
+                if (waitingListArr.length > 0) {
+                    await API.callNext(waitingListArr[0].id);
+                    this.render();
+                } else {
+                    alert("No waiting patients in queue.");
+                }
+            },
+            
+            callSpecific: async function(appointmentId) {
+                try {
+                    await API.callNext(appointmentId);
+                    this.render();
+                } catch(err) {
+                    alert("Error calling patient: " + err.message);
+                }
+            },
+
+            finishConsult: async function (appointmentId) {
+                if (confirm("End consultation without writing a prescription? (Click Cancel to go to Rx screen instead)")) {
+                    try {
+                        await API.completeConsultation(appointmentId);
+                        this.render();
+                    } catch(err) {
+                        alert("Error completing consultation");
+                    }
+                } else {
+                    window.location.href = 'prescription.html';
+                }
+            }
+        };
+
+        window.addEventListener('API_READY', () => {
+             setInterval(() => {
+                const c = document.getElementById('realtime-clock');
+                if(c) c.innerHTML = '<i class="fa-regular fa-clock"></i> ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }, 1000);
+
+            ApiQueueManager.render();
+            setInterval(() => ApiQueueManager.render(), 10000);
+        });
+
+        // Global Actions
+        function addWalkIn() {
+            alert('Adding new walk-ins via Receptionist panel only in Live Mode.');
+        }
+
+        function addEmergency() {
+            alert('Adding new emergencies via Receptionist panel only in Live Mode.');
+        }
+    </script>
+</body>
+</html>

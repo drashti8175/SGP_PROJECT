@@ -7,31 +7,39 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar glass-panel" id="sidebar-container"></div>
-        
-        <div class="main-content">
-            <h1 class="mb-4">Track Queue Status</h1>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1>Track Queue Status</h1>
+                <p>Monitor live queue position and wait times</p>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn notification-badge" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            </div>
+        </div>
 
-            <div class="form-group" style="max-width: 400px;">
+        <div class="card" style="margin-bottom: 24px; max-width: 600px;">
+            <div class="form-group mb-0">
                 <label class="form-label">Select Doctor to Check Queue</label>
-                <select id="doctorSelectQueue" class="form-control" onchange="checkQueue()">
+                <select id="doctorSelectQueue" class="form-select" onchange="checkQueue()">
                     <option value="">Choose a Doctor...</option>
                 </select>
             </div>
-
-            <div id="queueResult" class="grid-2 mt-4" style="display: none;">
-                <div class="glass-panel card text-center p-0" style="padding: 2rem;">
-                    <h3 class="text-muted">Total in Queue</h3>
-                    <h1 style="font-size: 3rem; color: var(--primary);" id="totalQueue">0</h1>
-                </div>
-                <div class="glass-panel card text-center p-0" style="padding: 2rem;">
-                    <h3 class="text-muted">Currently Serving Token</h3>
-                    <h1 style="font-size: 3rem; color: var(--success);" id="servingToken">-</h1>
-                </div>
-            </div>
-            <p id="queueMsg" class="mt-4 text-center"></p>
         </div>
+
+        <div id="queueResult" class="card-grid" style="display: none;">
+            <div class="card stat-card" style="align-items: center; justify-content: center; text-align: center; padding: 32px;">
+                <h3 class="text-muted" style="margin-bottom: 12px; font-weight: 500;">Your Position</h3>
+                <h1 style="font-size: 3.5rem; color: var(--accent); line-height: 1;" id="totalQueue">-</h1>
+            </div>
+            <div class="card stat-card" style="align-items: center; justify-content: center; text-align: center; padding: 32px;">
+                <h3 class="text-muted" style="margin-bottom: 12px; font-weight: 500;">Currently Serving Token</h3>
+                <h1 style="font-size: 3.5rem; color: var(--success); line-height: 1;" id="servingToken">-</h1>
+            </div>
+        </div>
+        <div id="queueMsg" class="mt-4"></div>
     </div>
 
     <script src="../js/api.js"></script>
@@ -57,6 +65,7 @@
             
             if (!docId) {
                 resDiv.style.display = 'none';
+                msg.innerHTML = '';
                 return;
             }
             
@@ -65,22 +74,31 @@
                 resDiv.style.display = 'grid';
                 msg.innerHTML = '';
                 
-                document.getElementById('totalQueue').innerText = res.queue_position !== null ? `You are #${res.queue_position}` : 'Not in Queue';
+                document.getElementById('totalQueue').innerText = res.queue_position ? `#${res.queue_position}` : '-';
                 document.getElementById('servingToken').innerText = res.current_serving_token !== 'None' ? `#${res.current_serving_token}` : 'Waiting';
 
-                if (res.patients_ahead !== null) {
-                    msg.innerHTML = `<div class="glass-panel card mt-4 text-center" style="border: 1px solid var(--primary-light); background: var(--bg-color);">
-                        <p style="font-size: 1.2rem; color: var(--text-main);">
-                            <i class="fa-solid fa-hourglass-half text-primary"></i> 
-                            Estimated Wait: <strong>${res.estimated_wait_time_mins} mins</strong>
+                if (res.patients_ahead !== null && res.queue_position !== undefined) {
+                    msg.innerHTML = `
+                    <div class="card text-center" style="max-width: 600px; padding: 24px; background: rgba(14, 165, 233, 0.05); border-color: rgba(14, 165, 233, 0.2);">
+                        <p style="font-size: 1.25rem; color: var(--dark); margin-bottom: 8px; font-weight: 600;">
+                            <i class="fa-solid fa-hourglass-half" style="color: var(--accent);"></i> 
+                            Estimated Wait: ${res.estimated_wait_time_mins} mins
                         </p>
-                        <p class="text-muted mt-1">${res.patients_ahead} people are currently ahead of you.</p>
+                        <p class="text-muted" style="font-size: 0.95rem;">
+                            There are <strong>${res.patients_ahead}</strong> patients ahead of you.
+                        </p>
+                    </div>`;
+                } else {
+                    msg.innerHTML = `
+                    <div class="card text-center" style="max-width: 600px; padding: 24px;">
+                        <p style="font-size: 1.1rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-circle-info"></i> You do not currently have a token waiting with this doctor today.
+                        </p>
                     </div>`;
                 }
             } catch (err) {
                 resDiv.style.display = 'none';
-                msg.className = 'mt-4 text-center text-danger';
-                msg.innerText = 'Failed to load queue status.';
+                msg.innerHTML = `<div class="card text-center text-danger" style="max-width: 600px;">Failed to load queue status.</div>`;
             }
         }
 

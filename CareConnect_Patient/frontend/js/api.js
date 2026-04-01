@@ -25,7 +25,9 @@ const api = {
     },
     
     async getDoctors() {
-        const res = await fetch(`${API_BASE}/doctor`);
+        const res = await fetch(`${API_BASE}/patient/doctors`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
         return res.json();
     },
     

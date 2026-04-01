@@ -1,58 +1,102 @@
-const API_BASE = 'http://localhost:3000/api/doctor';
+const BASE_URL = 'http://localhost:3000/api';
 
-const api = {
-    getHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+const API = {
+    // 1. Core Request Wrapper
+    request: async function(endpoint, method = 'GET', body = null) {
+        let token = localStorage.getItem('token');
+        
+        // Auto-login fallback for seamless demo if token is missing
+        if (!token && endpoint !== '/auth/login') {
+            console.log("No token found. Attempting auto-login...");
+            await this.login();
+            token = localStorage.getItem('token');
+        }
+
+        const headers = {
+            'Content-Type': 'application/json'
         };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method,
+            headers
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        try {
+            const response = await fetch(`${BASE_URL}${endpoint}`, options);
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'API Request Failed');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error(`[API ERROR] ${endpoint}:`, error);
+            throw error;
+        }
     },
-    async getStats() {
-        const res = await fetch(`${API_BASE}/stats`, { headers: this.getHeaders() });
-        return res.json();
+
+    // 2. Authentication
+    login: async function() {
+        try {
+            const data = await this.request('/auth/login', 'POST', {
+                email: 'doctor@demo.com',
+                password: 'password123',
+                role: 'doctor'
+            });
+            localStorage.setItem('token', data.token);
+            console.log("✅ Auto-Login Successful. Token saved.");
+            return data;
+        } catch (error) {
+            console.error("❌ Auto-Login Failed. Please make sure the seed script was run.", error);
+        }
     },
-    async getQueue() {
-        const res = await fetch(`${API_BASE}/queue`, { headers: this.getHeaders() });
-        return res.json();
+
+    // 3. Queue Management
+    getQueue: async function() {
+        return await this.request('/doctor/queue');
     },
-    async callNextPatient(appointmentId) {
-        const res = await fetch(`${API_BASE}/call_next`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({ appointment_id: appointmentId })
-        });
-        return res.json();
+
+    callNext: async function(appointmentId) {
+        return await this.request('/doctor/call_next', 'POST', { appointment_id: appointmentId });
     },
-    async getPerformance() {
-        const res = await fetch(`${API_BASE}/performance`, { headers: this.getHeaders() });
-        return res.json();
+
+    completeConsultation: async function(appointmentId) {
+        return await this.request('/doctor/complete', 'POST', { appointment_id: appointmentId });
     },
-    async getNotifications() {
-        const res = await fetch(`${API_BASE}/notifications`, { headers: this.getHeaders() });
-        return res.json();
+
+    // 4. Clinical Data
+    getStats: async function() {
+        return await this.request('/doctor/stats');
     },
-    async getPatientInfo(patientId) {
-        const res = await fetch(`${API_BASE}/patient/${patientId}`, { headers: this.getHeaders() });
-        return res.json();
+
+    getHistory: async function(patientId) {
+        return await this.request(`/doctor/patient-history/${patientId}`);
     },
-    async markNotificationRead(id) {
-        const res = await fetch(`${API_BASE}/notifications/read`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({ notif_id: id })
-        });
-        return res.json();
+
+    getPatientProfile: async function(patientId) {
+        return await this.request(`/doctor/patient/${patientId}`);
     },
-    async getPatientHistory(patientId) {
-        const res = await fetch(`${API_BASE}/history/${patientId}`, { headers: this.getHeaders() });
-        return res.json();
-    },
-    async prescribe(appointmentId, details) {
-        const res = await fetch(`${API_BASE}/prescribe`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({ appointment_id: appointmentId, details })
-        });
-        return res.json();
+
+    prescribe: async function(payload) {
+        // payload expects: { appointment_id, patient_id, diagnosis, medicines, notes }
+        return await this.request('/doctor/prescribe', 'POST', payload);
     }
 };
+
+// Initialize API and token on script load
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('token')) {
+        API.login().then(() => {
+            window.dispatchEvent(new Event('API_READY'));
+        });
+    } else {
+        setTimeout(() => window.dispatchEvent(new Event('API_READY')), 100);
+    }
+});

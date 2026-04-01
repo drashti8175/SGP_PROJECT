@@ -7,27 +7,33 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar glass-panel" id="sidebar-container"></div>
-        
-        <div class="main-content">
-            <h1 class="mb-4">Appointment History</h1>
-
-            <div class="glass-panel card p-0">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Doctor</th>
-                            <th>Specialization</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTable">
-                        <tr><td colspan="4" class="text-center text-muted">Loading history...</td></tr>
-                    </tbody>
-                </table>
+    <div id="sidebar-container"></div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1>Appointment History</h1>
+                <p>Review your past medical visits</p>
             </div>
+            <div class="header-actions">
+                <button class="icon-btn notification-badge" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            </div>
+        </div>
+
+        <div class="card p-0" style="padding: 0; overflow: hidden;">
+            <table class="modern-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--secondary);">
+                        <th style="padding: 16px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-muted);">Date</th>
+                        <th style="padding: 16px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-muted);">Doctor</th>
+                        <th style="padding: 16px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-muted);">Specialization</th>
+                        <th style="padding: 16px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-muted);">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable">
+                    <tr><td colspan="4" class="text-center text-muted" style="padding: 24px;">Loading history...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -39,26 +45,39 @@
 
         async function loadHistory() {
             try {
-                const appts = await api.getAppointments(patientId);
+                const appts = await api.getAppointments();
                 const tbody = document.getElementById('historyTable');
                 
-                if (appts.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No appointments found.</td></tr>';
+                if (!appts || appts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 24px;">No past appointments found.</td></tr>';
                     return;
                 }
+
+                const getBadgeClass = (status) => {
+                    if (status === 'Completed') return 'badge-checkin';
+                    if (status === 'Cancelled') return 'badge-emergency';
+                    if (status === 'Waiting') return 'badge-waiting';
+                    return 'badge'; // fallback
+                };
                 
                 tbody.innerHTML = appts.map(a => `
                     <tr>
-                        <td>${new Date(a.date).toLocaleDateString()}</td>
-                        <td>Dr. ${a.doctor_id?.name || 'Unknown'}</td>
-                        <td>${a.doctor_id?.specialization || 'N/A'}</td>
-                        <td>
-                            <span class="status-badge status-${a.status.toLowerCase()}">${a.status}</span>
+                        <td style="padding: 16px; border-bottom: 1px solid var(--border); font-weight: 500;">
+                            ${new Date(a.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
+                        </td>
+                        <td style="padding: 16px; border-bottom: 1px solid var(--border); color: var(--dark);">
+                            Dr. ${a.doctor_name || a.doctor_id?.name || 'Unknown'}
+                        </td>
+                        <td style="padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-muted);">
+                            ${a.specialization || a.doctor_id?.specialization || 'N/A'}
+                        </td>
+                        <td style="padding: 16px; border-bottom: 1px solid var(--border);">
+                            <span class="badge ${getBadgeClass(a.status)}" style="display:inline-block; padding: 6px 10px;">${a.status}</span>
                         </td>
                     </tr>
                 `).join('');
             } catch (err) {
-                document.getElementById('historyTable').innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load history.</td></tr>';
+                document.getElementById('historyTable').innerHTML = '<tr><td colspan="4" class="text-center text-danger" style="padding: 24px;">Failed to load history.</td></tr>';
             }
         }
 

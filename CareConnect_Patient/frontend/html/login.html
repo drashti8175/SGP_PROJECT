@@ -7,22 +7,27 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="glass-panel login-card text-center">
-            <h1 class="mb-4" style="color: var(--primary);">
-                <i class="fa-solid fa-heart-pulse"></i> CareConnect
-            </h1>
-            <h2 class="mb-4">Patient Login</h2>
+    <div style="display: flex; min-height: 100vh; background: var(--light); align-items: center; justify-content: center; padding: 24px; width: 100%;">
+        <div class="card" style="width: 100%; max-width: 440px; text-align: center; padding: 40px;">
+            <div class="brand" style="justify-content: center; font-size: 2rem; margin-bottom: 12px;">
+                <i class="fa-solid fa-heart-pulse" style="color:var(--accent);"></i> MediCore
+            </div>
+            <h2 style="color: var(--dark); font-size: 1.25rem; margin-bottom: 32px; font-weight: 500;">Patient Portal Login</h2>
+            
             <form id="loginForm">
-                <div class="form-group">
-                    <input type="email" id="email" class="form-control" placeholder="Email Address" required value="john@example.com">
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label class="form-label" style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted); font-weight: 600;">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="john@example.com" required value="john@example.com">
                 </div>
-                <div class="form-group">
-                    <input type="password" id="password" class="form-control" placeholder="Password" required value="password123">
+                <div class="form-group" style="margin-bottom: 32px; text-align: left;">
+                    <label class="form-label" style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted); font-weight: 600;">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required value="password123">
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Login</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.05rem; padding: 14px;">
+                    Sign In <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+                </button>
             </form>
-            <p id="errorMsg" class="text-danger mt-2"></p>
+            <p id="errorMsg" class="text-danger" style="margin-top: 16px; min-height: 24px; font-size: 0.9rem; font-weight: 500;"></p>
         </div>
     </div>
     

@@ -14,24 +14,37 @@ function logout() {
 }
 
 function renderSidebar(activePage) {
+    const userName = localStorage.getItem('careconnect_name') || 'Patient';
+    const init = userName.charAt(0).toUpperCase();
+
     const sidebarHTML = `
-        <div class="sidebar-header">
+        <div class="brand">
             <i class="fa-solid fa-heart-pulse"></i>
             CareConnect
         </div>
         <ul class="nav-links">
-            <a href="dashboard.html" class="nav-item ${activePage === 'dashboard' ? 'active' : ''}"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="booking.html" class="nav-item ${activePage === 'booking' ? 'active' : ''}"><i class="fa-solid fa-calendar-plus"></i> Book Appointment</a>
-            <a href="queue.html" class="nav-item ${activePage === 'queue' ? 'active' : ''}"><i class="fa-solid fa-people-arrows"></i> Track Queue</a>
-            <a href="prescriptions.html" class="nav-item ${activePage === 'prescriptions' ? 'active' : ''}"><i class="fa-solid fa-prescription-bottle-medical"></i> Prescriptions</a>
-            <a href="history.html" class="nav-item ${activePage === 'history' ? 'active' : ''}"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
-            <a href="notifications.html" class="nav-item ${activePage === 'notifications' ? 'active' : ''}"><i class="fa-solid fa-bell"></i> Notifications</a>
-            <a href="profile.html" class="nav-item ${activePage === 'profile' ? 'active' : ''}"><i class="fa-solid fa-user"></i> Profile</a>
-            <a href="#" onclick="logout()" class="nav-item mt-4 text-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            <a href="dashboard.html" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="booking.html" class="nav-link ${activePage === 'booking' ? 'active' : ''}"><i class="fa-solid fa-calendar-plus"></i> Book Appointment</a>
+            <a href="queue.html" class="nav-link ${activePage === 'queue' ? 'active' : ''}"><i class="fa-solid fa-people-arrows"></i> Track Queue</a>
+            <a href="prescriptions.html" class="nav-link ${activePage === 'prescriptions' ? 'active' : ''}"><i class="fa-solid fa-prescription-bottle-medical"></i> Prescriptions</a>
+            <a href="history.html" class="nav-link ${activePage === 'history' ? 'active' : ''}"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+            <a href="notifications.html" class="nav-link ${activePage === 'notifications' ? 'active' : ''}"><i class="fa-solid fa-bell"></i> Notifications</a>
         </ul>
+
+        <div class="user-profile" onclick="window.location.href='profile.html'">
+            <div class="user-avatar">${init}</div>
+            <div class="user-info">
+                <h4>${userName}</h4>
+                <p>View Profile</p>
+            </div>
+        </div>
+        <a href="#" onclick="logout()" class="nav-link text-danger" style="margin-top: 10px;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     `;
     const sidebarRef = document.getElementById('sidebar-container');
-    if (sidebarRef) sidebarRef.innerHTML = sidebarHTML;
+    if (sidebarRef) {
+        sidebarRef.className = 'sidebar';
+        sidebarRef.innerHTML = sidebarHTML;
+    }
 }
 
 // Format Dates

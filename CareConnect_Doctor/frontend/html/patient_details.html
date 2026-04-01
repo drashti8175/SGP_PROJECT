@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Details | Doctor Module</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { display: flex; height: 100vh; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); }
+        .sidebar { width: 260px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 1.5rem; }
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; background: var(--bg-color); }
+        .vital-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            position: relative;
+        }
+
+        .vital-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .vital-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .vital-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .vital-status {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .patient-header-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 24px;
+            align-items: center;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .info-group {
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .info-value {
+            color: var(--dark);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tag-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-user-doctor"></i>
+            <span style="margin-left:8px;">MediCore</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="doctor_dashboard.html" class="nav-item"><i
+                        class="fa-solid fa-grid-2"></i><span>Dashboard</span></a></li>
+            <li><a href="queue_management.html" class="nav-item"><i
+                        class="fa-solid fa-users-line"></i><span>Queue</span></a></li>
+            <li><a href="patient_details.html" class="nav-item active"><i
+                        class="fa-solid fa-hospital-user"></i><span>Patient Details</span></a></li>
+            <li><a href="doctor_reports.html" class="nav-item"><i
+                        class="fa-solid fa-chart-pie"></i><span>Reports</span></a></li>
+            <li><a href="ai_assist.html" class="nav-item"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI
+                        Assist</span></a></li>
+            <li style="margin-top: auto;">
+                <a href="doctor_profile.html" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+        <div class="user-profile" onclick="window.location.href='doctor_profile.html'" style="cursor: pointer; margin-top:auto;">
+            <div class="avatar" style="width:40px;height:40px;"><span>DR</span></div>
+            <div class="user-info">
+                <h4 style="margin:0; font-size:14px;">Dr. Rashmi</h4>
+                <p style="margin:0; font-size:12px; color:var(--text-muted)">Cardiologist</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="header flex-between mb-4">
+            <div class="page-title">
+                <h1 style="margin:0;">Patient Consultation</h1>
+                <p class="text-muted" style="margin-top:4px;">View details and manage treatment.</p>
+            </div>
+            <div class="header-actions" style="display:flex; gap:10px; align-items:center;">
+                <div class="time-display text-muted" id="realtime-clock" style="font-weight:600;"><i class="fa-regular fa-clock"></i> --:--</div>
+                <button class="btn btn-primary" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i>
+                    Back</button>
+            </div>
+        </header>
+
+        <div id="patient-content">
+            <!-- Populated via JS -->
+            <div style="text-align: center; color: var(--text-muted); padding: 40px;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                <p>Loading Details...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../js/system.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        let consultTimer;
+        let vitalsInterval;
+
+        document.addEventListener('DOMContentLoaded', () => {
+             setInterval(() => {
+                const c = document.getElementById('realtime-clock');
+                if(c) c.innerHTML = '<i class="fa-regular fa-clock"></i> ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }, 1000);
+
+            // Get Current Patient Fallback Wrapper
+            let current = null;
+            if(typeof System !== 'undefined') {
+                if(System.getCurrentPatient) {
+                    current = System.getCurrentPatient();
+                } else if(System.getQueue) {
+                    current = System.getQueue().find(p => p.status === 'in-consultation');
+                }
+            }
+
+            if (current) {
+                renderPatientDetails(current);
+                startTimer(current.startTime || Date.now());
+                updateVitalsLive();
+            } else {
+                document.getElementById('patient-content').innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 60px;">
+                        <i class="fa-solid fa-user-xmark" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h2>No Active Consultation</h2>
+                        <p>Go to Queue to call the next patient.</p>
+                        <a href="doctor_dashboard.html" class="btn btn-primary" style="margin-top: 20px;">Return to Dashboard</a>
+                    </div>
+                 `;
+            }
+        });
+
+        function renderPatientDetails(p) {
+            const container = document.getElementById('patient-content');
+
+            // 1. Risk Logic Fallbacks
+            let riskData = { isRisk: false, reasons: [] };
+            if(System.Risk && System.Risk.evaluate) {
+                // Determine mock values to feed into evaluate if Risk.evaluate requires specific vital schemas
+                const vitals = {hr: 80, bp_sys: 120, bp_dia: 80, spo2: 98};
+                riskData = System.Risk.evaluate(vitals, p);
+                if(p.type === 'Emergency' || p.priority === 'High') {
+                    riskData = { isRisk:true, reasons: ['Emergency Triage', ...(riskData.reasons||[])] };
+                }
+            }
+
+            const riskBadge = riskData.isRisk
+                ? `<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.9rem; padding: 6px 12px;"><i class="fa-solid fa-triangle-exclamation"></i> High Risk: ${(riskData.reasons||[]).join(', ')}</span>`
+                : `<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.9rem; padding: 6px 12px;"><i class="fa-solid fa-shield-heart"></i> Standard Risk</span>`;
+
+            // 2. AI Suggestions Fallbacks
+            let aiData = { diagnosis: 'Common cold, general distress.', tests: ['CBC', 'Metabolic Panel'] };
+            if (System.AI && System.AI.analyze) {
+                aiData = System.AI.analyze(p.reason || p.complaint || "General consultation") || aiData;
+            }
+
+            const ptName = p.patient_name || p.name || "Unknown Patient";
+            const ptId = p.id || p.patientId || "P-XXXX";
+            const ptAge = p.age || 35;
+            const ptGender = p.gender || 'Unknown';
+            const ptComplaint = p.reason || p.complaint || 'Routine Checkup';
+            const ptToken = p.token_number || p.token || '--';
+            
+            // Build History Mock (Since backend might just pass arrays)
+            let historyHtml = '<span class="tag" style="background: var(--bg-main);">No Chronic History</span>';
+            const hisArray = Array.isArray(p.history) ? p.history : (p.history ? p.history.split(',') : []);
+            if(hisArray.length > 0 && hisArray[0] !== 'None') {
+                historyHtml = hisArray.map(h => `<span class="tag">${String(h).trim()}</span>`).join('');
+            }
+
+            container.innerHTML = `
+                <div class="patient-header-grid">
+                    <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem; background:rgba(14, 165, 233, 0.1); color:var(--accent);">
+                        ${ptName.charAt(0)}
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                            <h2 style="color: var(--dark); font-size: 1.8rem; margin:0;">${ptName}</h2>
+                            ${riskBadge}
+                        </div>
+                        <p style="color: var(--text-muted); margin:0;">
+                            <i class="fa-solid fa-id-card"></i> ${ptId} &bull; 
+                            <i class="fa-solid fa-venus-mars"></i> ${ptGender}, ${ptAge} Years &bull; 
+                            <i class="fa-solid fa-phone"></i> +91 98765 43210
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div id="consult-timer-badge" style="font-size: 1.2rem; font-weight: 700; color: var(--accent); background: rgba(14, 165, 233, 0.1); padding: 8px 16px; border-radius: 8px; display: inline-block; margin-bottom: 8px;">
+                            <i class="fa-regular fa-clock"></i> <span id="consult-time">00:00</span>
+                        </div>
+                        <span style="display: block; color: var(--text-muted); font-size: 0.9rem;">Token #${ptToken}</span>
+                    </div>
+                </div>
+
+                <div class="details-grid">
+                    <!-- Left: Clinical Info -->
+                    <div class="layout-section">
+                        <!-- Live Vitals Monitoring Panel -->
+                        <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fbbf24; margin-bottom: 24px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h3 style="color: #92400e; margin: 0; font-size: 1.1rem;">
+                                    <i class="fa-solid fa-heartbeat"></i> Live Vitals Monitoring
+                                </h3>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); background: white; padding: 4px 8px; border-radius: 12px;">
+                                    <i class="fa-solid fa-clock"></i> Auto-refresh: 3s
+                                </span>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                                <div class="vital-card">
+                                    <div class="vital-icon pulse-animation" style="color: #dc2626;">
+                                        <i class="fa-solid fa-heart-pulse"></i>
+                                    </div>
+                                    <div class="vital-value" id="vital-hr" style="color: #dc2626;">72</div>
+                                    <div class="vital-label">Heart Rate (bpm)</div>
+                                    <div class="vital-status" id="hr-status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">Normal</div>
+                                </div>
+                                
+                                <div class="vital-card">
+                                    <div class="vital-icon" style="color: #7c3aed;">
+                                        <i class="fa-solid fa-droplet"></i>
+                                    </div>
+                                    <div class="vital-value" id="vital-bp" style="color: #7c3aed;">120/80</div>
+                                    <div class="vital-label">Blood Pressure</div>
+                                    <div class="vital-status" id="bp-status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">Normal</div>
+                                </div>
+                                
+                                <div class="vital-card">
+                                    <div class="vital-icon" style="color: #0284c7;">
+                                        <i class="fa-solid fa-lungs"></i>
+                                    </div>
+                                    <div class="vital-value" id="vital-o2" style="color: #0284c7;">98%</div>
+                                    <div class="vital-label">Oxygen Sat</div>
+                                    <div class="vital-status" id="o2-status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">Normal</div>
+                                </div>
+                                
+                                <div class="vital-card">
+                                    <div class="vital-icon" style="color: #ea580c;">
+                                        <i class="fa-solid fa-temperature-half"></i>
+                                    </div>
+                                    <div class="vital-value" id="vital-temp" style="color: #ea580c;">98.6°F</div>
+                                    <div class="vital-label">Temperature</div>
+                                    <div class="vital-status" id="temp-status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">Normal</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="section-title" style="color: var(--accent); margin-bottom: 20px;">Clinical Overview</h3>
+                            
+                            <div class="info-group">
+                                <span class="info-label">Chief Complaint</span>
+                                <div class="info-value" style="font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+                                    ${ptComplaint} 
+                                    <span style="font-size: 0.8rem; background: var(--bg-color); padding: 4px 8px; border-radius: 4px; color: var(--text-muted); border: 1px solid var(--border);">Active</span>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
+                                <div class="info-group">
+                                    <span class="info-label">Vitals (Nurse Check)</span>
+                                    <div class="info-value" style="font-family: monospace; font-size: 1.1rem;">
+                                        BP: <span style="color: var(--success);">120/80</span><br>
+                                        Spo2: <span style="color: var(--accent);">98%</span><br>
+                                        Temp: 98.6°F
+                                    </div>
+                                </div>
+                                <div class="info-group">
+                                    <span class="info-label">Pre-Consult Notes</span>
+                                    <div class="info-value" style="font-style: italic; color: var(--text-muted); font-size: 0.9rem;">
+                                        "Patient appears slightly anxious. Reported mild dizziness earlier."
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+                            <button onclick="System.completeConsultation(); location.href='doctor_dashboard.html'" class="btn btn-primary" style="height: 60px; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); display:flex; align-items:center; justify-content:center;">
+                                <i class="fa-solid fa-file-prescription"></i> Complete Consult
+                            </button>
+                            <a href="patient_history.html" class="btn btn-outline" style="height: 60px; font-size: 1.1rem; display:flex; align-items:center; justify-content:center;">
+                                <i class="fa-solid fa-clock-rotate-left"></i> View History
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right: Medical Profile & AI -->
+                    <div class="layout-section" style="display: flex; flex-direction: column; gap: 24px;">
+                         <div class="card">
+                            <h3 class="section-title" style="margin-bottom: 20px;">Medical Profile</h3>
+                            
+                            <div class="info-group">
+                                <span class="info-label">Chronic Conditions</span>
+                                <div class="tag-container">
+                                    ${historyHtml}
+                                </div>
+                            </div>
+
+                            <div class="info-group" style="margin-top: 16px;">
+                                <span class="info-label">Known Allergies</span>
+                                <div class="tag-container">
+                                    <span class="tag" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Penicillin</span>
+                                </div>
+                            </div>
+                         </div>
+                         
+                         <!-- Reference Ranges -->
+                         <div class="card">
+                             <h4 style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Standard Reference</h4>
+                             <div style="font-size: 0.85rem; color: var(--text-main); display: flex; flex-direction: column; gap: 8px;">
+                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
+                                     <span>BP (Normal)</span>
+                                     <span style="font-family: monospace;">120/80 mmHg</span>
+                                 </div>
+                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
+                                     <span>RBS (Random)</span>
+                                     <span style="font-family: monospace;">< 140 mg/dL</span>
+                                 </div>
+                                 <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">
+                                     <span>SpO2</span>
+                                     <span style="font-family: monospace;">> 95%</span>
+                                 </div>
+                                 <div style="display: flex; justify-content: space-between;">
+                                     <span>Temp</span>
+                                     <span style="font-family: monospace;">97-99°F</span>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- AI Assistant Context-Aware -->
+                         <div class="card" style="background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">
+                             <div style="padding: 5px;">
+                                <h4 style="color: #0369a1; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Insight
+                                </h4>
+                                <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                                    <p style="font-size: 0.9rem; color: #0c4a6e; margin-bottom: 4px;"><strong>Differential Diagnosis:</strong></p>
+                                    <p style="font-size: 0.9rem; color: #0c4a6e; line-height:1.4;">${aiData.diagnosis}</p>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-outline" style="flex: 1; border-color: #7dd3fc; color: #0284c7; font-size: 0.85rem; background:white;" onclick="alert('Added standard meds to buffer.')">
+                                        <i class="fa-solid fa-plus"></i> Add Meds
+                                    </button>
+                                     <button class="btn btn-outline" style="flex: 1; border-color: #7dd3fc; color: #0284c7; font-size: 0.85rem; background:white;" onclick="alert('Lab tests suggested: ${(aiData.tests||['CBC']).join(', ')}')">
+                                        <i class="fa-solid fa-flask"></i> Labs
+                                    </button>
+                                </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startTimer(startTimeStr) {
+            const start = startTimeStr ? new Date(startTimeStr) : new Date();
+            const el = document.getElementById('consult-time');
+
+            clearInterval(consultTimer);
+            consultTimer = setInterval(() => {
+                const now = new Date();
+                const diff = Math.floor((now - start) / 1000);
+                const m = Math.floor(diff / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                if (el) el.textContent = `${m}:${s}`;
+
+                // Visual alert if > 15 mins (Avg time)
+                const limit = (typeof System !== 'undefined' && System.defaults) ? System.defaults.avgConsultTime : 15;
+                if (diff > (limit * 60)) {
+                    document.getElementById('consult-timer-badge').style.color = 'var(--danger)';
+                    document.getElementById('consult-timer-badge').style.background = 'rgba(239, 68, 68, 0.1)';
+                }
+            }, 1000);
+        }
+
+        // Auto-update vitals every 3 seconds (simulated)
+        function updateVitalsLive() {
+            clearInterval(vitalsInterval);
+            const baseHR = 72;
+            const baseBP = [120, 80];
+            const baseO2 = 98;
+            const baseTemp = 98.6;
+
+            vitalsInterval = setInterval(() => {
+                const elHR = document.getElementById('vital-hr');
+                if(!elHR) return;
+                
+                // Simulate slight variations
+                const hr = baseHR + Math.floor(Math.random() * 5) - 2;
+                const bpSys = baseBP[0] + Math.floor(Math.random() * 4) - 2;
+                const bpDia = baseBP[1] + Math.floor(Math.random() * 4) - 2;
+                const o2 = baseO2 + Math.floor(Math.random() * 3) - 1;
+                const temp = (baseTemp + (Math.random() * 0.4 - 0.2)).toFixed(1);
+
+                // Update display
+                elHR.textContent = hr;
+                document.getElementById('vital-bp').textContent = `${bpSys}/${bpDia}`;
+                document.getElementById('vital-o2').textContent = o2 + '%';
+                document.getElementById('vital-temp').textContent = temp + '°F';
+
+                // Update status colors
+                document.getElementById('hr-status').textContent = hr > 100 ? 'High' : hr < 60 ? 'Low' : 'Normal';
+                document.getElementById('bp-status').textContent = bpSys > 140 ? 'High' : 'Normal';
+                document.getElementById('o2-status').textContent = o2 < 95 ? 'Low' : 'Normal';
+                document.getElementById('temp-status').textContent = temp > 99.5 ? 'Fever' : 'Normal';
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

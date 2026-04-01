@@ -42,8 +42,15 @@ const appointmentSchema = new mongoose.Schema({
         weight: { type: String, default: '70' }
     },
     risk_level: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Low' },
+    rejection_reason: { type: String, default: '' },
+    approved_at: Date,
+    checked_in_at: Date,
     consultation_start: Date,
-    consultation_end: Date
+    consultation_end: Date,
+    payment_status: { type: String, enum: ['unpaid', 'paid', 'waived'], default: 'unpaid' },
+    payment_amount: { type: Number, default: 0 },
+    payment_method: { type: String, enum: ['cash', 'card', 'upi', 'online', ''], default: '' },
+    payment_date: { type: Date }
 }, { 
     timestamps: true 
 });

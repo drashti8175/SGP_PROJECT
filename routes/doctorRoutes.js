@@ -156,39 +156,82 @@ router.get('/history/:patient_id', async (req, res) => {
     }
 });
 
-// 5. Write prescription (Structured)
+// 5. Write prescription
 router.post('/prescribe', async (req, res) => {
     try {
         const { appointment_id, patient_id, diagnosis, medicines, notes } = req.body;
-        if (!appointment_id || !diagnosis) return res.status(400).json({ error: "Missing required fields" });
+        if (!diagnosis) return res.status(400).json({ error: 'Diagnosis is required' });
+        if (!patient_id) return res.status(400).json({ error: 'Patient ID is required' });
 
-        const pres = await Prescription.create({
-            appointmentId: appointment_id,
-            patientId: patient_id,
-            doctorId: req.doctorId,
-            diagnosis,
-            medicines, // Array of {name, dosage, duration}
-            notes
-        });
+        // Use upsert — update if exists, create if not
+        const pres = await Prescription.findOneAndUpdate(
+            { appointmentId: appointment_id, doctorId: req.doctorId },
+            {
+                patientId: patient_id,
+                doctorId: req.doctorId,
+                appointmentId: appointment_id,
+                diagnosis,
+                medicines: medicines || [],
+                notes: notes || ''
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
 
-        res.json({ message: "Prescription saved!", prescription_id: pres._id });
+        // Mark appointment as completed
+        if (appointment_id) {
+            await Appointment.findByIdAndUpdate(appointment_id, { status: 'Completed' });
+            const io = req.app.get('io');
+            if (io) io.to('clinic_queue').emit('queue_updated', { message: 'Prescription saved' });
+        }
+
+        res.json({ message: 'Prescription saved successfully!', prescription_id: pres._id });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Database error (Prescription might already exist for this appointment)" });
+        console.error('Prescribe error:', err.message);
+        res.status(500).json({ error: 'Failed to save prescription: ' + err.message });
     }
 });
 
-// Get Patient History
+// Get Patient Full History (appointments + prescriptions)
 router.get('/patient-history/:patient_id', async (req, res) => {
     try {
-        const history = await Prescription.find({ patientId: req.params.patient_id })
-            .populate('doctorId', 'userId') 
+        const pid = req.params.patient_id;
+
+        // All appointments for this patient
+        const appointments = await Appointment.find({ patient_id: pid })
+            .populate({ path: 'doctor_id', populate: { path: 'userId', select: 'name' } })
+            .sort({ date: -1 });
+
+        // All prescriptions for this patient
+        const prescriptions = await Prescription.find({ patientId: pid })
+            .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
             .sort({ createdAt: -1 });
-            
-        // Populate doctor names by nested userId population if needed, but for now just return raw
-        res.json(history);
+
+        // Patient profile
+        const patient = await User.findById(pid).select('name email phone gender dob blood_group');
+
+        res.json({
+            patient: patient || {},
+            appointments: appointments.map(a => ({
+                id: a._id,
+                date: a.date,
+                status: a.status,
+                type: a.type,
+                reason_for_visit: a.reason_for_visit,
+                doctor_name: a.doctor_id?.userId?.name || 'Unknown',
+                token_number: a.token_number
+            })),
+            prescriptions: prescriptions.map(p => ({
+                id: p._id,
+                date: p.createdAt,
+                diagnosis: p.diagnosis,
+                medicines: p.medicines,
+                notes: p.notes,
+                doctor_name: p.doctorId?.userId?.name || 'Unknown'
+            }))
+        });
     } catch (err) {
-        res.status(500).json({ error: "History retrieval error" });
+        console.error(err);
+        res.status(500).json({ error: 'History retrieval error' });
     }
 });
 
@@ -234,20 +277,61 @@ router.get('/performance', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Performance error" }); }
 });
 
-// 7. Smart Alerts / Notifications
+// 7. Smart Alerts / Notifications — generated from real appointment data
 router.get('/notifications', async (req, res) => {
     try {
-        const notifs = await Notification.find({ doctor_id: req.doctorId }).sort({ timestamp: -1 });
-        res.json(notifs);
-    } catch (err) { res.status(500).json({ error: "Notification error" }); }
+        const today = new Date().toISOString().split('T')[0];
+        const appointments = await Appointment.find({ doctor_id: req.doctorId })
+            .populate('patient_id', 'name')
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        const alerts = [];
+
+        for (const a of appointments) {
+            const name = a.patient_id?.name || 'Unknown';
+            if (a.type === 'Emergency' && a.date === today && ['Waiting','In-Consultation'].includes(a.status)) {
+                alerts.push({ type: 'emergency', message: `🚨 Emergency: ${name} needs urgent attention`, time: a.createdAt, is_read: false });
+            }
+            if (['Cancelled','cancelled'].includes(a.status) && a.date === today) {
+                alerts.push({ type: 'noshow', message: `🚫 No-show: ${name} cancelled their appointment`, time: a.updatedAt || a.createdAt, is_read: false });
+            }
+            if (a.status === 'Waiting' && a.date === today) {
+                alerts.push({ type: 'waiting', message: `⏳ ${name} is waiting — Token #${a.token_number}`, time: a.createdAt, is_read: false });
+            }
+            if (['Completed','completed'].includes(a.status) && a.date === today) {
+                alerts.push({ type: 'completed', message: `✅ Consultation completed with ${name}`, time: a.updatedAt || a.createdAt, is_read: true });
+            }
+        }
+
+        // Check follow-ups from prescriptions
+        const Prescription = require('../models/Prescription');
+        const prescriptions = await Prescription.find({ doctorId: req.doctorId })
+            .populate('patientId', 'name').sort({ createdAt: -1 }).limit(20);
+
+        for (const p of prescriptions) {
+            const followUpMatch = p.notes?.match(/Follow-up: (\S+)/);
+            if (followUpMatch) {
+                const followDate = new Date(followUpMatch[1]);
+                const diff = Math.ceil((followDate - new Date()) / (1000 * 60 * 60 * 24));
+                if (diff >= 0 && diff <= 3) {
+                    alerts.push({ type: 'followup', message: `📅 Follow-up due in ${diff} day(s): ${p.patientId?.name || 'Patient'}`, time: p.createdAt, is_read: false });
+                } else if (diff < 0) {
+                    alerts.push({ type: 'overdue', message: `⚠️ Overdue follow-up: ${p.patientId?.name || 'Patient'} (was ${followUpMatch[1]})`, time: p.createdAt, is_read: false });
+                }
+            }
+        }
+
+        alerts.sort((a, b) => new Date(b.time) - new Date(a.time));
+        res.json(alerts.slice(0, 30));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Notification error' });
+    }
 });
 
 router.post('/notifications/read', async (req, res) => {
-    try {
-        const { notif_id } = req.body;
-        await Notification.findByIdAndUpdate(notif_id, { is_read: true });
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: "Update error" }); }
+    res.json({ success: true });
 });
 
 module.exports = router;
