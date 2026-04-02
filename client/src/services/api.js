@@ -39,6 +39,10 @@ export const authService = {
     const { data } = await api.post('/auth/reset-password', { token, password });
     return data;
   },
+  resetPasswordDirect: async (email, password) => {
+    const { data } = await api.post('/auth/reset-password-direct', { email, password });
+    return data;
+  },
 };
 
 export const doctorService = {

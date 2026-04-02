@@ -20,12 +20,6 @@ export default function AdminUsers() {
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
-  const updateRole = async (id, role) => {
-    await adminService.updateUserRole(id, role);
-    notify('✅ Role updated');
-    fetchData();
-  };
-
   const deleteUser = async (id, name) => {
     if (!confirm(`Delete user ${name}?`)) return;
     await adminService.deleteUser(id);
@@ -87,13 +81,9 @@ export default function AdminUsers() {
                 </td>
                 <td className="text-muted">{u.email}</td>
                 <td>
-                  <select value={u.role}
-                    onChange={e => updateRole(u._id, e.target.value)}
-                    style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, background: 'white' }}>
-                    {['patient','doctor','receptionist','admin'].map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
+                  <span className={`badge ${roleBadge(u.role)}`} style={{ textTransform: 'capitalize' }}>
+                    {u.role}
+                  </span>
                 </td>
                 <td className="text-muted text-sm">{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td>

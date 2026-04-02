@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { JWT_SECRET, verifyToken } = require('../middleware/authMiddleware');
 
 const User = require('../models/User');
@@ -113,29 +114,70 @@ router.post('/forgot-password', async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            console.log(`⚠️ [DEBUG] Password reset requested for unknown email: ${email}`);
-        } else {
-            // Create a simple base64 token of the email for simulation purposes
-            const token = Buffer.from(email).toString('base64');
-            console.log(`✅ [DEBUG] Password reset requested for: ${user.email}`);
-            console.log(`🔗 [SIMULATION] Reset Link: http://localhost:3000/reset-password?token=${token}`);
+            return res.status(404).json({ error: "Email not registered" });
         }
-        // Always return success for security reasons (don't confirm if account exists)
-        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+
+        // Generate secure random token
+        const token = crypto.randomBytes(32).toString('hex');
+        
+        // Set expiry (15 minutes)
+        const expiry = Date.now() + 15 * 60 * 1000;
+
+        // Store token in database (assuming User model supports these fields)
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = expiry;
+        await user.save();
+
+        const resetLink = `http://localhost:5173/reset-password/${token}`;
+        console.log(`✅ [DEBUG] Password reset requested for: ${user.email}`);
+        console.log(`🔗 [SIMULATION] Reset Link: ${resetLink}`);
+
+        res.json({ 
+            message: 'Password reset link sent to your email',
+            resetLink: resetLink // Provided for demo/testing
+        });
     } catch (err) { res.status(500).json({ error: "Server error during request." }); }
+});
+
+router.post('/reset-password-direct', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "Email not found." });
+        }
+
+        user.password = bcrypt.hashSync(password, 10);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+        res.json({ message: "Password updated successfully!" });
+    } catch (err) {
+        console.error("❌ [DEBUG] Direct Reset Error:", err.message);
+        res.status(500).json({ error: "Failed to reset password." });
+    }
 });
 
 // Actual Password Reset Logic
 router.post('/reset-password', async (req, res) => {
     try {
         const { token, password } = req.body;
-        if (!token || !password) return res.status(400).json({ error: "Invalid reset attempt." });
+        if (!token || !password) return res.status(400).json({ error: "Token and password are required." });
 
-        const email = Buffer.from(token, 'base64').toString();
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ error: "Reset link is invalid or expired." });
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: "Invalid or expired token" });
+        }
 
         user.password = bcrypt.hashSync(password, 10);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
         await user.save();
         res.json({ message: "Password updated successfully!" });
     } catch (err) { res.status(500).json({ error: "Failed to reset password." }); }

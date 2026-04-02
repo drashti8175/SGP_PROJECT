@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { receptionistService } from '../../services/api';
 import { socket } from '../../services/api';
-import { LayoutDashboard, RefreshCw, CheckCircle, XCircle, UserCheck, CreditCard } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, CheckCircle, XCircle, UserCheck, CreditCard, CheckCircle2 } from 'lucide-react';
 
 const statusBadge = (s) => {
   if (s === 'confirmed' || s === 'Waiting') return 'badge-success';
@@ -19,6 +19,10 @@ export default function AppointmentQueue() {
   const fetchData = () => {
     receptionistService.getRequests().then(data => { setAppointments(data); setLoading(false); }).catch(() => setLoading(false));
   };
+
+  const updateStatus = async (id, status) => { await receptionistService.updateStatus(id, status); fetchData(); };
+  const checkIn = async (id) => { await receptionistService.checkIn(id); fetchData(); };
+  const markPaid = async (id) => { await receptionistService.updatePayment(id, 'paid'); fetchData(); };
 
   useEffect(() => {
     fetchData();
@@ -56,7 +60,7 @@ export default function AppointmentQueue() {
         ) : (
           <table className="data-table" style={{ width: '100%' }}>
             <thead>
-              <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Payment</th></tr>
+              <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Payment</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filtered.map(a => (
@@ -70,6 +74,22 @@ export default function AppointmentQueue() {
                   <td>{a.date}</td>
                   <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                   <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
+                  <td>
+                    <div className="action-btns">
+                      {a.status === 'pending' && (
+                        <button className="btn btn-xs btn-success" title="Confirm" onClick={() => updateStatus(a.id, 'confirmed')}><CheckCircle size={13} /></button>
+                      )}
+                      {a.status === 'confirmed' && (
+                        <button className="btn btn-xs btn-primary" title="Check In" onClick={() => checkIn(a.id)}><UserCheck size={13} /></button>
+                      )}
+                      {a.payment_status !== 'paid' && !['Cancelled','cancelled','pending'].includes(a.status) && (
+                        <button className="btn btn-xs btn-warning" title="Mark Paid" onClick={() => markPaid(a.id)}><CreditCard size={13} /></button>
+                      )}
+                      {!['Completed', 'completed', 'Cancelled', 'cancelled'].includes(a.status) && (
+                        <button className="btn btn-xs btn-danger" title="Cancel" onClick={() => updateStatus(a.id, 'cancelled')}><XCircle size={13} /></button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

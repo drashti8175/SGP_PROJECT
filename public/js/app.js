@@ -345,7 +345,8 @@ async function fetchPatientPrescriptions() {
         list.innerHTML = '';
         res.data.forEach(p => {
             const medList = p.medicines.map(m => `<li><strong>${m.name}</strong> - ${m.dosage}</li>`).join('');
-            list.innerHTML += `<div class="card" style="padding: 1.5rem; border-top: 4px solid var(--secondary);">
+            list.innerHTML += `<div class="card" style="padding: 1.5rem; border-top: 4px solid var(--secondary);"> 
+                <h3 style="color:var(--text-main); font-size:1.2rem; margin-bottom:5px;">Patient: ${currentUser.name}</h3>
                 <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
                     <div>
                         <h4 style="color:var(--text-main); font-size:1.1rem; margin-bottom:2px;">${p.doctor_name}</h4>

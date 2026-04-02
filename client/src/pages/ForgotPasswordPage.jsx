@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Stethoscope, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Stethoscope, Mail, CheckCircle2, ArrowRight } from 'lucide-react';
 import { authService } from '../services/api'; // Import authService
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(''); // Added for error handling
 
@@ -15,7 +16,10 @@ export default function ForgotPasswordPage() {
     setError(''); // Clear previous errors
 
     try {
-      await authService.forgotPassword(email); // Call the new backend service
+      const data = await authService.forgotPassword(email); // Call the new backend service
+      if (data.resetLink) {
+        setResetToken(data.resetLink.split('/').pop());
+      }
       setSubmitted(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send reset link. Please try again.');
@@ -30,10 +34,17 @@ export default function ForgotPasswordPage() {
         <div className="login-card" style={{ textAlign: 'center' }}>
           <div className="brand-icon mb-4" style={{ margin: '0 auto' }}><CheckCircle2 size={48} color="#10b981" /></div>
           <h2 className="fw-800">Check Your Email</h2>
-          <p className="text-muted mt-2">We've sent a password reset link to <strong>{email}</strong> if an account exists.</p>
-          <Link to="/login" className="btn-login mt-4" style={{ display: 'block', textDecoration: 'none' }}>
-            Return to Login
-          </Link>
+          <p className="text-muted mt-2">A password reset link has been sent to <strong>{email}</strong>. Please check your inbox to continue.</p>
+          
+          {resetToken && (
+            <div className="mt-4 p-4" style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <p className="text-sm fw-600 text-primary mb-3">Development Mode: Proceed to Reset</p>
+              <Link to={`/reset-password/${resetToken}`} className="btn-login" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                Reset Password Now <ArrowRight size={16} />
+              </Link>
+            </div>
+          )}
+          <p className="text-muted text-xs mt-4">You can close this tab once you have reset your password.</p>
         </div>
       </div>
     );
@@ -63,10 +74,6 @@ export default function ForgotPasswordPage() {
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
-
-        <Link to="/login" className="forgot-link" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 20 }}>
-          <ArrowLeft size={14} /> Back to Login
-        </Link>
       </div>
     </div>
   );

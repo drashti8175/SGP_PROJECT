@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { authService } from '../services/api';
 import { Stethoscope, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export default function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const token = searchParams.get('token');
+  const { token } = useParams();
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,14 +16,13 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) return setError("Passwords do not match.");
-    if (password.length < 4) return setError("Password must be at least 4 characters.");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
 
     setLoading(true);
     setError('');
     try {
       await authService.resetPassword(token, password);
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       setError(err.response?.data?.error || "Reset failed.");
     } finally {
@@ -40,8 +37,11 @@ export default function ResetPasswordPage() {
       <div className="login-card" style={{ textAlign: 'center' }}>
         <div className="brand-icon mb-4" style={{ margin: '0 auto' }}><CheckCircle2 size={48} color="#10b981" /></div>
         <h2 className="fw-800">Password Updated!</h2>
-        <p className="text-muted mt-2">Your password has been reset successfully. Redirecting you to login...</p>
-        <Link to="/login" className="btn-login mt-4" style={{ display: 'block', textDecoration: 'none' }}>Login Now</Link>
+        <div className="success-msg mt-3 mb-4" style={{ color: '#059669', fontWeight: 600 }}>
+          Your password has been reset successfully.
+        </div>
+        <p className="text-muted">You can now close this window and return to your original login screen to sign in with your new password.</p>
+        <button className="btn-login mt-4" onClick={() => window.close()}>Close Tab</button>
       </div>
     </div>
   );

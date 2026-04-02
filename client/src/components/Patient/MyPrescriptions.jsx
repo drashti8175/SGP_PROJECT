@@ -11,15 +11,20 @@ const HEALTH_QUOTES = [
   { quote: "A healthy outside starts from the inside.", author: "Robert Urich" },
 ];
 
-const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
-
 export default function MyPrescriptions() {
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
   const [search, setSearch] = useState('');
+  const [patientName, setPatientName] = useState(''); // State to hold patient's name
+
+  const randomQuote = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.name) {
+      setPatientName(user.name);
+    }
     patientService.getPrescriptions()
       .then(setPrescriptions)
       .catch(() => {})
@@ -124,7 +129,7 @@ export default function MyPrescriptions() {
           const isOpen = expanded[i];
 
           return (
-            <div key={i} className={`presc-card ${isOpen ? 'presc-card-open' : ''}`}>
+            <div key={i} className={`presc-card ${isOpen ? 'presc-card-open' : ''}`} style={{ borderTop: '4px solid var(--secondary)' }}>
               {/* Card Header */}
               <div className="presc-card-header" onClick={() => toggle(i)}>
                 <div className="presc-card-left">
@@ -132,6 +137,8 @@ export default function MyPrescriptions() {
                   <div>
                     <h4 className="presc-diag">{mainDiag}</h4>
                     <div className="presc-meta">
+                      <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{patientName}</span>
+                      <span>·</span>
                       <span><User size={11} /> Dr. {p.doctor_name}</span>
                       <span>·</span>
                       <span><Calendar size={11} /> {formatDate(p)}</span>

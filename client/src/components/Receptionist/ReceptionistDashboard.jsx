@@ -262,7 +262,7 @@ export default function ReceptionistDashboard() {
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
-                <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Type</th><th>Status</th><th>Payment</th></tr>
+                <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Type</th><th>Status</th><th>Payment</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 <AnimatePresence>
@@ -291,6 +291,30 @@ export default function ReceptionistDashboard() {
                         <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${sb.cls}`}>{sb.label}</span></td>
                         <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
+                        <td>
+                          <div className="action-btns">
+                            {a.status === 'pending' && (
+                              <>
+                                <button className="btn btn-xs btn-success" title="Approve" onClick={() => setApproveModal(a)}>
+                                  <CheckCircle2 size={12} />
+                                </button>
+                                <button className="btn btn-xs btn-danger" title="Reject" onClick={() => setRejectModal(a)}>
+                                  <XCircle size={12} />
+                                </button>
+                              </>
+                            )}
+                            {a.status === 'confirmed' && (
+                              <button className="btn btn-xs btn-primary" title="Check In" onClick={() => checkIn(a.id, a.patient_name)}>
+                                <UserCheck size={12} />
+                              </button>
+                            )}
+                            {a.payment_status !== 'paid' && !['Cancelled','cancelled','pending'].includes(a.status) && (
+                              <button className="btn btn-xs btn-warning" title="Collect Payment" onClick={() => setPaymentModal(a)}>
+                                <CreditCard size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
                       </motion.tr>
                     );
                   })}
