@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { patientService, socket } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, RefreshCw, Clock, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Full workflow steps shown to patient
 const WORKFLOW_STEPS = [
@@ -77,7 +77,6 @@ export default function MyAppointments() {
           <h1 className="page-title"><Calendar size={22} /> My Appointments</h1>
           <p className="page-sub">{appointments.length} total appointments</p>
         </div>
-        <button className="btn btn-outline" onClick={fetchData}><RefreshCw size={15} /> Refresh</button>
       </div>
 
       {/* Active appointment alert */}

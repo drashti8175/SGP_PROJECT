@@ -16,7 +16,7 @@ export default function PatientHistoryView() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
-  const [tab, setTab] = useState('timeline');
+  const [tab, setTab] = useState('visits');
 
   useEffect(() => {
     Promise.all([patientService.getPrescriptions(), patientService.getAppointments()])
@@ -98,9 +98,6 @@ export default function PatientHistoryView() {
 
       {/* Tabs */}
       <div className="filter-tabs">
-        <button className={`filter-tab ${tab === 'timeline' ? 'active' : ''}`} onClick={() => setTab('timeline')}>
-          🕐 Timeline
-        </button>
         <button className={`filter-tab ${tab === 'prescriptions' ? 'active' : ''}`} onClick={() => setTab('prescriptions')}>
           💊 Prescriptions ({prescriptions.length})
         </button>
@@ -108,124 +105,6 @@ export default function PatientHistoryView() {
           📅 All Visits ({appointments.length})
         </button>
       </div>
-
-      {/* ── TIMELINE TAB ── */}
-      {tab === 'timeline' && (
-        <div className="card">
-          <h3 className="card-title mb-4">🕐 Health Timeline</h3>
-          {prescriptions.length === 0 ? (
-            <div className="history-empty">
-              <div className="history-empty-icon">🏥</div>
-              <h3>No Medical History Yet</h3>
-              <p className="text-muted">Your health journey will be recorded here after your first consultation.</p>
-              <div className="health-quote-small">
-                <Quote size={14} />
-                <em>"The first wealth is health." — Ralph Waldo Emerson</em>
-              </div>
-            </div>
-          ) : (
-            <div className="timeline">
-              {prescriptions.map((p, i) => {
-                const diagLines = p.diagnosis?.split('\n') || [];
-                const mainDiag = getMainDiag(p);
-                const followUpMatch = p.notes?.match(/Follow-up: (\S+)/);
-                const isOverdue = followUpMatch && new Date(followUpMatch[1]) < new Date();
-                const isOpen = expanded[i];
-
-                return (
-                  <div key={i} className="timeline-item">
-                    <div className="timeline-dot-large">
-                      <Stethoscope size={12} />
-                    </div>
-                    <div className={`timeline-content ${isOpen ? 'timeline-content-open' : ''}`}>
-                      {/* Timeline Header */}
-                      <div className="timeline-header" onClick={() => toggle(i)}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                            <span className="fw-700" style={{ fontSize: 15 }}>{mainDiag}</span>
-                            {followUpMatch && (
-                              <span className={`badge ${isOverdue ? 'badge-danger' : 'badge-warning'}`}>
-                                <Clock size={10} /> Follow-up: {followUpMatch[1]} {isOverdue ? '⚠ Overdue' : ''}
-                              </span>
-                            )}
-                          </div>
-                          <div className="timeline-meta">
-                            <span><Stethoscope size={11} /> Dr. {p.doctor_name}</span>
-                            <span>·</span>
-                            <span><Calendar size={11} /> {formatDate(p.created_at || p.createdAt)}</span>
-                            <span>·</span>
-                            <span><Pill size={11} /> {p.medicines?.length || 0} medicines</span>
-                          </div>
-                        </div>
-                        <div className={`presc-chevron ${isOpen ? 'open' : ''}`}>
-                          <ChevronDown size={18} />
-                        </div>
-                      </div>
-
-                      {/* Expanded */}
-                      {isOpen && (
-                        <div className="timeline-body">
-                          {/* SOAP */}
-                          {diagLines.length > 1 && (
-                            <div className="presc-section">
-                              <p className="presc-section-title">📋 Clinical Notes</p>
-                              <div className="soap-box">
-                                {diagLines.map((l, j) => {
-                                  if (!l) return null;
-                                  const colors = { '[S]': '#3b82f6', '[O]': '#10b981', '[A]': '#f59e0b', '[P]': '#8b5cf6' };
-                                  const key = Object.keys(colors).find(k => l.startsWith(k));
-                                  return (
-                                    <div key={j} className="soap-row" style={{ borderLeftColor: key ? colors[key] : '#e2e8f0' }}>
-                                      <span className="soap-key" style={{ color: key ? colors[key] : 'var(--text-muted)' }}>{key || '  '}</span>
-                                      <span className="soap-val">{l.replace(/^\[.\] /, '')}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Medicines */}
-                          {p.medicines?.length > 0 && (
-                            <div className="presc-section">
-                              <p className="presc-section-title">💊 Medicines</p>
-                              <div className="med-cards-grid">
-                                {p.medicines.map((m, j) => (
-                                  <div key={j} className="med-detail-card">
-                                    <div className="mdc-top">
-                                      <div className="mdc-icon">💊</div>
-                                      <div>
-                                        <p className="fw-700">{m.name}</p>
-                                        <p className="text-muted text-xs">Prescribed</p>
-                                      </div>
-                                    </div>
-                                    <div className="mdc-info">
-                                      <div className="mdc-row"><span>Dosage</span><span className="fw-600">{m.dosage}</span></div>
-                                      <div className="mdc-row"><span>Duration</span><span className="fw-600">{m.duration}</span></div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Doctor Advice */}
-                          {p.notes && (
-                            <div className="doctor-advice-box">
-                              <Quote size={14} className="advice-quote-icon" />
-                              <p>{p.notes.replace(/Lab Tests:.*/, '').replace(/Follow-up:.*/, '').trim()}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── PRESCRIPTIONS TAB ── */}
       {tab === 'prescriptions' && (

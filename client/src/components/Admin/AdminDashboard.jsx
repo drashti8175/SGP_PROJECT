@@ -51,10 +51,7 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="header-actions">
-          <button className="btn btn-outline" onClick={fetchStats}><RefreshCw size={15} /> Refresh</button>
-          <button className="btn btn-primary" onClick={() => navigate('/admin/doctors/add')}>
-            <UserPlus size={15} /> Add Doctor
-          </button>
+          
         </div>
       </div>
 
@@ -98,7 +95,6 @@ export default function AdminDashboard() {
           { label: 'Staff & Users', icon: '👥', path: '/admin/users', color: '#7c3aed' },
           { label: 'Analytics', icon: '📊', path: '/admin/analytics', color: '#10b981' },
           { label: 'Clinic Settings', icon: '⚙️', path: '/admin/settings', color: '#f59e0b' },
-          { label: 'Audit Logs', icon: '🔍', path: '/admin/audit', color: '#dc2626' },
         ].map(item => (
           <motion.button key={item.path} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             className="quick-nav-btn" onClick={() => navigate(item.path)}>

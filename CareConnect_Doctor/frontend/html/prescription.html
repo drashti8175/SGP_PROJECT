@@ -126,12 +126,16 @@
                 </div>
             </header>
 
-            <form id="rx-form" onsubmit="event.preventDefault(); savePrescription();">
+            <form id="rx-form" novalidate>
                 <div class="dashboard-layout" style="grid-template-columns: 2fr 1fr; align-items: start; gap: 24px; display:grid;">
 
                     <!-- Main Form -->
                     <div class="card" style="padding:24px; background:white;">
                         <h3 class="section-title" style="margin-bottom: 24px; color:var(--dark);">Diagnosis & Medication</h3>
+                        <div class="form-group">
+                            <label class="form-label">Patient ID</label>
+                            <input type="text" id="rxPatientId" name="patientId" class="form-input" placeholder="P101" required data-validate>
+                        </div>
 
                         <!-- Patient Allergies & Risk Badge -->
                         <div
@@ -247,7 +251,7 @@
 
                             <div class="form-group">
                                 <label class="form-label">Follow Up Date</label>
-                                <input type="date" class="form-input" id="follow-up">
+                                <input type="date" class="form-input" id="follow-up" name="followUpDate" required data-validate>
                             </div>
                         </div>
 
@@ -262,9 +266,19 @@
     </div>
 
     <script src="../js/system.js"></script>
+    <script src="../js/formValidation.js"></script>
     <script src="../js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            FormValidation.attach('#rx-form');
+            const rxForm = document.getElementById('rx-form');
+            if (rxForm) {
+                rxForm.addEventListener('submit', (e) => {
+                    if (e.defaultPrevented) return;
+                    savePrescription();
+                });
+            }
+
             let current = null;
             if(typeof System !== 'undefined') {
                 current = System.getCurrentPatient() || System.getQueue().find(p => p.status === 'Consulting');

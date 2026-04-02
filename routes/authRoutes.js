@@ -105,4 +105,40 @@ router.patch('/update-profile', verifyToken, async (req, res) => {
     } catch (err) { res.status(500).json({ error: 'Update failed' }); }
 });
 
+// Forgot Password Request
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: "Email is required." });
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            console.log(`⚠️ [DEBUG] Password reset requested for unknown email: ${email}`);
+        } else {
+            // Create a simple base64 token of the email for simulation purposes
+            const token = Buffer.from(email).toString('base64');
+            console.log(`✅ [DEBUG] Password reset requested for: ${user.email}`);
+            console.log(`🔗 [SIMULATION] Reset Link: http://localhost:3000/reset-password?token=${token}`);
+        }
+        // Always return success for security reasons (don't confirm if account exists)
+        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    } catch (err) { res.status(500).json({ error: "Server error during request." }); }
+});
+
+// Actual Password Reset Logic
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+        if (!token || !password) return res.status(400).json({ error: "Invalid reset attempt." });
+
+        const email = Buffer.from(token, 'base64').toString();
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ error: "Reset link is invalid or expired." });
+
+        user.password = bcrypt.hashSync(password, 10);
+        await user.save();
+        res.json({ message: "Password updated successfully!" });
+    } catch (err) { res.status(500).json({ error: "Failed to reset password." }); }
+});
+
 module.exports = router;

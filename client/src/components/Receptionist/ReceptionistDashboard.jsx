@@ -143,7 +143,6 @@ export default function ReceptionistDashboard() {
         </div>
         <div className="header-actions">
           {toast && <span className="action-toast">{toast}</span>}
-          <button className="btn btn-outline" onClick={fetchData}><RefreshCw size={15} /> Refresh</button>
           <button className="btn btn-primary" onClick={() => navigate('/receptionist/walkin')}>
             <CalendarPlus size={15} /> Walk-In
           </button>
@@ -263,7 +262,7 @@ export default function ReceptionistDashboard() {
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
-                <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Type</th><th>Status</th><th>Payment</th><th>Actions</th></tr>
+                <tr><th>Token</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Type</th><th>Status</th><th>Payment</th></tr>
               </thead>
               <tbody>
                 <AnimatePresence>
@@ -292,35 +291,6 @@ export default function ReceptionistDashboard() {
                         <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${sb.cls}`}>{sb.label}</span></td>
                         <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
-                        <td>
-                          <div className="action-btns">
-                            {/* APPROVE — only for pending */}
-                            {a.status === 'pending' && (
-                              <button className="btn btn-sm btn-success" onClick={() => setApproveModal(a)}>
-                                <CheckCircle2 size={13} /> Approve
-                              </button>
-                            )}
-                            {/* REJECT — only for pending */}
-                            {a.status === 'pending' && (
-                              <button className="btn btn-sm btn-danger" onClick={() => setRejectModal(a)}>
-                                <XCircle size={13} /> Reject
-                              </button>
-                            )}
-                            {/* CHECK IN — only for confirmed */}
-                            {a.status === 'confirmed' && (
-                              <button className="btn btn-sm btn-primary" onClick={() => checkIn(a.id, a.patient_name)}>
-                                <UserCheck size={13} /> Check In
-                              </button>
-                            )}
-                            {/* PAYMENT */}
-                            {a.payment_status !== 'paid' && !['Cancelled','cancelled','pending'].includes(a.status) && (
-                              <button className="btn btn-sm btn-warning"
-                                onClick={() => setPaymentModal(a)}>
-                                <CreditCard size={13} /> Pay
-                              </button>
-                            )}
-                          </div>
-                        </td>
                       </motion.tr>
                     );
                   })}

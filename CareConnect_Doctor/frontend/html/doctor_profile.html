@@ -58,7 +58,7 @@
                     <p class="text-muted" style="margin:4px 0 0 0;">Manage your account and clinic settings.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-primary" id="save-btn" onclick="saveSettings()">Save Changes</button>
+                    <button type="button" class="btn btn-primary" id="save-btn">Save Changes</button>
                 </div>
             </header>
 
@@ -83,27 +83,28 @@
 
                 <!-- Settings Form -->
                 <div>
+                    <form id="doctorProfileForm" novalidate>
                     <div class="card mb-4">
                         <h3 class="section-title" style="margin-bottom: 24px; color:var(--dark);">Clinic Settings</h3>
 
                         <div class="form-group">
                             <label class="form-label">Full Name</label>
-                            <input type="text" class="form-input" id="doc-name">
+                            <input type="text" name="name" class="form-input" id="doc-name" required data-validate>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Specialization</label>
-                            <input type="text" class="form-input" id="doc-spec">
+                            <input type="text" name="specialization" class="form-input" id="doc-spec" required data-validate>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             <div class="form-group">
                                 <label class="form-label">Avg. Consult Time (mins)</label>
-                                <input type="number" class="form-input" id="avg-time">
+                                <input type="number" name="avgConsultTime" class="form-input" id="avg-time" required data-validate>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Daily Patient Limit</label>
-                                <input type="number" class="form-input" id="daily-limit">
+                                <input type="number" name="dailyLimit" class="form-input" id="daily-limit" required data-validate>
                             </div>
                         </div>
 
@@ -144,15 +145,25 @@
                             <i class="fa-solid fa-right-from-bracket"></i> Save & Logout
                         </button>
                     </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
+                    </form>
     <script src="../js/system.js"></script>
+    <script src="../js/formValidation.js"></script>
     <script src="../js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            FormValidation.attach('#doctorProfileForm');
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.addEventListener('click', (ev) => {
+                const form = document.getElementById('doctorProfileForm');
+                const inputs = Array.from(form.querySelectorAll('input, select, textarea')).filter(i => !i.disabled);
+                const allValid = inputs.every(i => !i.classList.contains('fv-input-error') && (i.required ? i.value.trim() !== '' : true));
+                if (!allValid) {
+                    ev.preventDefault();
+                    form.querySelector('.fv-input-error')?.focus();
+                    return;
+                }
+                saveSettings();
+            });
             loadSettings();
         });
 

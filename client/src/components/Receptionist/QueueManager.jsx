@@ -158,7 +158,7 @@ export default function QueueManager() {
               <thead>
                 <tr>
                   <th>Token</th><th>Patient</th><th>Doctor</th><th>Reason</th>
-                  <th>Type</th><th>Status</th><th>Est. Arrival</th><th>Payment</th><th>Actions</th>
+                  <th>Type</th><th>Status</th><th>Est. Arrival</th><th>Payment</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,28 +188,6 @@ export default function QueueManager() {
                           <span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>
                             {a.payment_status === 'paid' ? '✅ Paid' : '⏳ Unpaid'}
                           </span>
-                        </td>
-                        <td>
-                          <div className="action-btns">
-                            {a.status === 'confirmed' && (
-                              <button className="btn btn-xs btn-primary" title="Check In Patient"
-                                onClick={() => checkIn(a.id, a.patient_name)}>
-                                <UserCheck size={12} /> Check In
-                              </button>
-                            )}
-                            {a.payment_status !== 'paid' && ['Waiting','confirmed','In-Consultation','Completed','completed'].includes(a.status) && (
-                              <button className="btn btn-xs btn-warning" title="Collect Payment"
-                                onClick={() => markPaid(a.id, a.patient_name, a.consultation_fee)}>
-                                <CreditCard size={12} /> Pay
-                              </button>
-                            )}
-                            {!['Completed','completed','Cancelled','cancelled'].includes(a.status) && (
-                              <button className="btn btn-xs btn-danger" title="Cancel"
-                                onClick={() => cancel(a.id, a.patient_name)}>
-                                <XCircle size={12} />
-                              </button>
-                            )}
-                          </div>
                         </td>
                       </motion.tr>
                     );

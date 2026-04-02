@@ -35,12 +35,6 @@ export default function AdminAppointments() {
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
-  const updateStatus = async (id, status) => {
-    await adminService.updateAppointment(id, status);
-    notify(`✅ Status updated to ${status}`);
-    fetchData();
-  };
-
   const batchApprove = async () => {
     if (!selected.length) return;
     await adminService.batchApprove(selected);
@@ -102,7 +96,7 @@ export default function AdminAppointments() {
                 <tr>
                   <th><input type="checkbox" onChange={toggleAll} checked={selected.length === appointments.length} /></th>
                   <th>Token</th><th>Patient</th><th>Doctor</th><th>Date</th>
-                  <th>Type</th><th>Status</th><th>Payment</th><th>Actions</th>
+                  <th>Type</th><th>Status</th><th>Payment</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,26 +107,20 @@ export default function AdminAppointments() {
                       <td><input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggleSelect(a.id)} /></td>
                       <td><span className="token-num">#{a.token_number}</span></td>
                       <td>
-                        <p className="fw-600">{a.patient_name}</p>
-                        <p className="text-muted text-xs">{a.patient_email}</p>
+                        <div className="patient-cell">
+                          <div className="patient-avatar">{a.patient_name?.charAt(0)}</div>
+                          <div>
+                            <p className="fw-600">{a.patient_name}</p>
+                            <p className="text-muted text-xs">{a.patient_email}</p>
+                            {a.patient_phone && <p className="text-muted text-xs">{a.patient_phone}</p>}
+                          </div>
+                        </div>
                       </td>
                       <td>{a.doctor_name}</td>
                       <td className="text-muted">{a.date}</td>
                       <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
                       <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                       <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
-                      <td>
-                        <div className="action-btns">
-                          {!['Waiting','In-Consultation','Completed','completed'].includes(a.status) && (
-                            <button className="btn btn-xs btn-success" title="Approve"
-                              onClick={() => updateStatus(a.id, 'confirmed')}><CheckCircle2 size={12} /></button>
-                          )}
-                          {!['Completed','completed','Cancelled','cancelled'].includes(a.status) && (
-                            <button className="btn btn-xs btn-danger" title="Cancel"
-                              onClick={() => updateStatus(a.id, 'cancelled')}><XCircle size={12} /></button>
-                          )}
-                        </div>
-                      </td>
                     </motion.tr>
                   ))}
                 </AnimatePresence>

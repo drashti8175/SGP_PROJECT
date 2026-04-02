@@ -7,9 +7,8 @@ import AdminDoctors from '../components/Admin/AdminDoctors';
 import AdminUsers from '../components/Admin/AdminUsers';
 import AdminAnalytics from '../components/Admin/AdminAnalytics';
 import ClinicSettings from '../components/Admin/ClinicSettings';
-import AuditLog from '../components/Admin/AuditLog';
 import {
-  LayoutDashboard, Calendar, Stethoscope, Users, BarChart2, Settings, Shield
+  LayoutDashboard, Calendar, Stethoscope, Users, BarChart2, Settings
 } from 'lucide-react';
 
 const navItems = [
@@ -19,7 +18,6 @@ const navItems = [
   { path: '/admin/users',        label: 'Staff & Users', icon: <Users size={18} /> },
   { path: '/admin/analytics',    label: 'Analytics',     icon: <BarChart2 size={18} /> },
   { path: '/admin/settings',     label: 'Settings',      icon: <Settings size={18} /> },
-  { path: '/admin/audit',        label: 'Audit Log',     icon: <Shield size={18} /> },
 ];
 
 export default function AdminLayout() {
@@ -35,7 +33,6 @@ export default function AdminLayout() {
           <Route path="users"        element={<AdminUsers />} />
           <Route path="analytics"    element={<AdminAnalytics />} />
           <Route path="settings"     element={<ClinicSettings />} />
-          <Route path="audit"        element={<AuditLog />} />
         </Routes>
       </main>
     </div>

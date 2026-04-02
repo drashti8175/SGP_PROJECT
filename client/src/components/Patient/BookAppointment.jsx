@@ -34,14 +34,76 @@ export default function BookAppointment() {
   const [queueCounts, setQueueCounts] = useState({});
   const [criteriaAccepted, setCriteriaAccepted] = useState(false);
   const [form, setForm] = useState({
-    name: '', phone: '', age: '', gender: '', blood_group: '',
+    name: '', phone: '', dob: '', gender: '', blood_group: '',
     reason_for_visit: '', type: 'Normal', symptoms: ''
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [canSubmit, setCanSubmit] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const invalidInputStyle = {
+    borderColor: '#dc2626',
+    boxShadow: '0 0 0 0.1rem rgba(220, 38, 38, 0.25)',
+  };
+
+  const setF = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    setFieldErrors(prev => ({ ...prev, [k]: '' }));
+  };
+
+  const validateForm = () => {
+    const errs = {};
+    const name = form.name.trim();
+    const phone = form.phone.trim();
+    const reason = form.reason_for_visit.trim();
+    const symptoms = form.symptoms.trim();
+    const dob = form.dob;
+
+    let calcAge = null;
+    if (dob) {
+      const birth = new Date(dob);
+      if (!isNaN(birth)) {
+        const today = new Date();
+        calcAge = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) calcAge -= 1;
+      }
+    }
+
+    if (!name) errs.name = 'Full name is required.';
+    else if (!/^[A-Za-z\s]{3,}$/.test(name)) errs.name = 'Name should contain only letters/spaces and be at least 3 characters.';
+
+    if (!phone) errs.phone = 'Contact number is required.';
+    else if (!/^[1-9][0-9]{9}$/.test(phone)) errs.phone = 'Phone must be exactly 10 digits and cannot start with 0.';
+
+    if (!dob) errs.dob = 'Date of birth is required.';
+    else if (isNaN(new Date(dob).getTime())) errs.dob = 'Please enter a valid date of birth.';
+    else {
+      const birth = new Date(dob);
+      const today = new Date();
+      if (birth > today) errs.dob = 'Future date is not allowed';
+    }
+
+    if (!reason) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
+    else if (!/^[A-Za-z\s]+$/.test(reason)) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
+    else if (reason.length < 5) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
+
+    if (symptoms && /\\d/.test(symptoms)) errs.symptoms = 'Symptoms description cannot contain numbers.';
+
+    if (!form.gender) errs.gender = 'Gender selection is required.';
+
+    if (!form.blood_group) errs.blood_group = 'Blood group selection is required.';
+
+    setFieldErrors(errs);
+    return { valid: Object.keys(errs).length === 0, errs };
+  };
+
+  useEffect(() => {
+    const { valid } = validateForm();
+    setCanSubmit(valid);
+  }, [form]);
 
   useEffect(() => {
     // Do NOT pre-fill name — patient must enter it themselves
@@ -67,12 +129,22 @@ export default function BookAppointment() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return; // prevent double submit
-    setError(''); setLoading(true);
+
+    const { valid } = validateForm();
+    if (!valid) {
+      setError('Please fix validation errors before submission.');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
     try {
-      if (form.phone || form.age || form.gender || form.blood_group) {
+      if (form.phone || form.gender || form.blood_group || form.dob) {
         await api.patch('/auth/update-profile', {
-          phone: form.phone, gender: form.gender, blood_group: form.blood_group,
-          dob: form.age ? new Date(new Date().getFullYear() - parseInt(form.age), 0, 1).toISOString() : undefined
+          phone: form.phone,
+          gender: form.gender,
+          blood_group: form.blood_group,
+          dob: form.dob ? new Date(form.dob).toISOString() : undefined
         }).catch(() => {});
       }
       const reason = form.symptoms
@@ -87,6 +159,7 @@ export default function BookAppointment() {
         phone: form.phone,
         gender: form.gender,
         blood_group: form.blood_group,
+        dob: form.dob,
       });
       setResult({ ...data, doctorName: selected.name, specialization: selected.specialization });
       setStep(4);
@@ -167,7 +240,7 @@ export default function BookAppointment() {
             </button>
             <button className="btn btn-outline" onClick={() => {
               setStep(1); setResult(null); setSelected(null); setCriteriaAccepted(false);
-              setForm({ name: user?.name || '', phone: '', age: '', gender: '', blood_group: '', reason_for_visit: '', type: 'Normal', symptoms: '' });
+              setForm({ name: user?.name || '', phone: '', dob: '', gender: '', blood_group: '', reason_for_visit: '', type: 'Normal', symptoms: '' });
             }}>Book Another</button>
           </div>
         </div>
@@ -290,12 +363,28 @@ export default function BookAppointment() {
                 <label>Full Name *</label>
                 <input placeholder="Enter your full name" value={form.name}
                   onChange={e => setF('name', e.target.value)} required />
+                {fieldErrors.name && <small className="text-danger">{fieldErrors.name}</small>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="field-group">
-                  <label>Age</label>
-                  <input type="number" min="1" max="120" placeholder="e.g. 25"
-                    value={form.age} onChange={e => setF('age', e.target.value)} />
+                  <label>Date of Birth *</label>
+                  <input type="date" value={form.dob} onChange={e => setF('dob', e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    style={fieldErrors.dob ? invalidInputStyle : {}}
+                    required />
+                  {fieldErrors.dob && <small className="text-danger">{fieldErrors.dob}</small>}
+                  {form.dob && !fieldErrors.dob && (() => {
+                    const b = new Date(form.dob);
+                    if (!isNaN(b)) {
+                      const t = new Date();
+                      let y = t.getFullYear() - b.getFullYear();
+                      const m = t.getMonth() - b.getMonth();
+                      if (m < 0 || (m === 0 && t.getDate() < b.getDate())) y -= 1;
+                      const displayedAge = y < 1 ? 0 : y;
+                      return <small className="text-info">Calculated age: {displayedAge} year{displayedAge === 1 ? '' : 's'}</small>;
+                    }
+                    return null;
+                  })()}
                 </div>
                 <div className="field-group">
                   <label>Gender</label>
@@ -307,9 +396,10 @@ export default function BookAppointment() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="field-group">
-                  <label><Phone size={12} /> Phone</label>
-                  <input placeholder="+91 XXXXX XXXXX" value={form.phone}
-                    onChange={e => setF('phone', e.target.value)} />
+                  <label><Phone size={12} /> Phone *</label>
+                  <input placeholder="9876543210" value={form.phone}
+                    onChange={e => setF('phone', e.target.value.replace(/[^0-9]/g, ''))} maxLength={10} inputMode="numeric" required />
+                  {fieldErrors.phone && <small className="text-danger">{fieldErrors.phone}</small>}
                 </div>
                 <div className="field-group">
                   <label><Heart size={12} /> Blood Group</label>
@@ -342,12 +432,17 @@ export default function BookAppointment() {
                 <label>Main Reason for Visit *</label>
                 <input placeholder="e.g. Fever, Chest pain, Regular checkup..."
                   value={form.reason_for_visit}
-                  onChange={e => setF('reason_for_visit', e.target.value)} required />
+                  onChange={e => setF('reason_for_visit', e.target.value)}
+                  style={fieldErrors.reason_for_visit ? invalidInputStyle : {}}
+                  required />
+                {fieldErrors.reason_for_visit && <small className="text-danger">{fieldErrors.reason_for_visit}</small>}
               </div>
               <div className="field-group">
                 <label>Describe Symptoms (optional)</label>
                 <textarea rows={3} placeholder="Describe your symptoms — duration, severity, location..."
-                  value={form.symptoms} onChange={e => setF('symptoms', e.target.value)} />
+                  value={form.symptoms} onChange={e => setF('symptoms', e.target.value)}
+                  style={fieldErrors.symptoms ? invalidInputStyle : {}} />
+                {fieldErrors.symptoms && <small className="text-danger">{fieldErrors.symptoms}</small>}
               </div>
               <div className="field-group">
                 <label>Appointment Type</label>
@@ -375,9 +470,10 @@ export default function BookAppointment() {
               </div>
 
               {error && <div className="alert alert-danger">{error}</div>}
-              <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+              <button type="submit" className="btn btn-primary w-full" disabled={loading || !canSubmit}>
                 {loading ? 'Submitting...' : '📋 Submit Appointment Request →'}
               </button>
+              {(!canSubmit && !loading) && <p className="text-danger text-xs mt-2">Fix highlighted fields before submission.</p>}
             </form>
           </div>
         </div>

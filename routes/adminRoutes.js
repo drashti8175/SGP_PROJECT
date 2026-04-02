@@ -13,14 +13,25 @@ router.use(verifyRole(['admin']));
 // 1. Full dashboard stats
 router.get('/stats', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-        const weekStr = weekAgo.toISOString().split('T')[0];
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+
+        // ISO week starts Monday
+        const dayOfWeek = now.getDay(); // 0=Sunday,1=Monday
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStartDate = new Date(now);
+        weekStartDate.setHours(0, 0, 0, 0);
+        weekStartDate.setDate(now.getDate() + mondayOffset);
+        const weekStart = weekStartDate.toISOString().split('T')[0];
+
+        const weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekStartDate.getDate() + 6);
+        const weekEnd = weekEndDate.toISOString().split('T')[0];
 
         const [total_today, total_week, pending, waiting, completed, no_show,
                total_doctors, total_patients, total_staff, paid_count, emergency] = await Promise.all([
             Appointment.countDocuments({ date: today, status: { $nin: ['Cancelled','cancelled'] } }),
-            Appointment.countDocuments({ date: { $gte: weekStr }, status: { $nin: ['Cancelled','cancelled'] } }),
+            Appointment.countDocuments({ date: { $gte: weekStart, $lte: weekEnd }, status: { $nin: ['Cancelled','cancelled'] } }),
             Appointment.countDocuments({ status: 'confirmed' }),
             Appointment.countDocuments({ date: today, status: 'Waiting' }),
             Appointment.countDocuments({ status: { $in: ['Completed','completed'] } }),
@@ -70,6 +81,7 @@ router.get('/appointments', async (req, res) => {
             reason_for_visit: a.reason_for_visit, risk_level: a.risk_level,
             patient_name: a.patient_id?.name || 'Unknown',
             patient_email: a.patient_id?.email || '',
+            patient_phone: a.patient_id?.phone || '',
             patient_id: a.patient_id?._id,
             doctor_name: a.doctor_id?.userId?.name || 'Unknown',
             doctor_id: a.doctor_id?._id,

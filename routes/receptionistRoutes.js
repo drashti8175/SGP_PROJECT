@@ -130,18 +130,45 @@ router.post('/payment', async (req, res) => {
 // 6. Walk-in booking (create patient + appointment)
 router.post('/walkin', async (req, res) => {
     try {
-        const { name, email, phone, doctor_id, reason_for_visit, type } = req.body;
-        if (!name || !doctor_id || !reason_for_visit) return res.status(400).json({ error: 'Missing required fields' });
+        const { name, email, phone, gender, dob, blood_group, doctor_id, reason_for_visit, type } = req.body;
 
-        // Create or find patient
-        let patient = email ? await User.findOne({ email }) : null;
-        if (!patient) {
+        if (!name || !phone || !doctor_id || !reason_for_visit) {
+            return res.status(400).json({ error: 'Required fields: name, phone, doctor_id, reason_for_visit' });
+        }
+
+        const emailCandidate = (email || '').trim().toLowerCase();
+        const phoneCandidate = (phone || '').trim();
+
+        let patient = null;
+        if (emailCandidate) {
+            patient = await User.findOne({ email: emailCandidate, role: 'patient' });
+        }
+        if (!patient && phoneCandidate) {
+            patient = await User.findOne({ phone: phoneCandidate, role: 'patient' });
+        }
+
+        if (patient) {
+            // Update existing patient details
+            await User.findByIdAndUpdate(patient._id, {
+                name, 
+                email: emailCandidate || patient.email, 
+                phone: phoneCandidate || patient.phone,
+                gender: gender || patient.gender,
+                dob: dob ? new Date(dob) : patient.dob,
+                blood_group: blood_group || patient.blood_group,
+                last_visit: new Date()
+            }, { new: true, runValidators: true });
+        } else {
             patient = await User.create({
                 name,
-                email: email || `walkin_${Date.now()}@clinic.com`,
+                email: emailCandidate || `walkin_${Date.now()}@clinic.com`,
                 password: bcrypt.hashSync('walkin123', 10),
                 role: 'patient',
-                phone: phone || ''
+                phone: phoneCandidate,
+                gender: gender || '',
+                dob: dob ? new Date(dob) : null,
+                blood_group: blood_group || '',
+                last_visit: new Date()
             });
         }
 
@@ -162,7 +189,20 @@ router.post('/walkin', async (req, res) => {
         const io = req.app.get('io');
         if (io) io.to('clinic_queue').emit('queue_updated', { message: 'Walk-in patient added' });
 
-        res.json({ message: 'Walk-in booked', token_number, appointment_id: appt._id, patient_id: patient._id });
+        res.json({
+            message: 'Walk-in booked',
+            token_number,
+            appointment_id: appt._id,
+            patient_id: patient._id,
+            patient: {
+                name: patient.name,
+                email: patient.email,
+                phone: patient.phone,
+                gender: patient.gender,
+                dob: patient.dob,
+                blood_group: patient.blood_group
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Walk-in booking failed' });

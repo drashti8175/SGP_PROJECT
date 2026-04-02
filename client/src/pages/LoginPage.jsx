@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../App';
-import { Stethoscope, Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import { Stethoscope, Eye, EyeOff, UserPlus, LogIn, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -82,14 +82,19 @@ export default function LoginPage() {
           )}
           <div className="field-group">
             <label>Email Address</label>
-            <input type="email" placeholder="you@clinic.com" value={form.email} onChange={e => set('email', e.target.value)} required />
+            <div className="icon-input">
+              <Mail size={16} className="input-icon" />
+              <input type="email" placeholder="you@clinic.com" value={form.email} onChange={e => set('email', e.target.value)} required />
+            </div>
           </div>
           <div className="field-group">
             <label>Password</label>
-            <div className="pass-wrap">
+            <div className="icon-input pass-wrap">
+              <Lock size={16} className="input-icon" />
               <input type={showPass ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => set('password', e.target.value)} required />
               <button type="button" onClick={() => setShowPass(s => !s)}>{showPass ? <EyeOff size={16} /> : <Eye size={16} />}</button>
             </div>
+            {mode === 'login' && <Link to="/forgot-password" title="Reset your password" className="forgot-link">Forgot Password?</Link>}
           </div>
           {error && <div className="error-msg">{error}</div>}
           <button type="submit" className="btn-login" disabled={loading}>
@@ -97,21 +102,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {mode === 'login' && (
-          <div className="demo-section">
-            <p className="demo-label">Quick Demo Access</p>
-            <div className="demo-btns-grid">
-              {demoAccounts.map(acc => (
-                <button key={acc.label} onClick={() => fillDemo(acc)}
-                  style={{ borderColor: acc.color, background: `${acc.color}10` }}>
-                  <span>{acc.icon}</span>
-                  <span style={{ color: acc.color, fontWeight: 700 }}>{acc.label}</span>
-                </button>
-              ))}
-            </div>
-            <p className="demo-hint">All passwords: <strong>1234</strong></p>
-          </div>
-        )}
+
       </div>
     </div>
   );
