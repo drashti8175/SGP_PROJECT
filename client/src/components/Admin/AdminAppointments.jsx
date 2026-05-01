@@ -103,7 +103,7 @@ export default function AdminAppointments() {
                 <AnimatePresence>
                   {appointments.map(a => (
                     <motion.tr key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className={`${a.type === 'Emergency' ? 'row-emergency' : ''} ${selected.includes(a.id) ? 'row-selected' : ''}`}>
+                      className={`${selected.includes(a.id) ? 'row-selected' : ''}`}>
                       <td><input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggleSelect(a.id)} /></td>
                       <td><span className="token-num">#{a.token_number}</span></td>
                       <td>
@@ -118,7 +118,7 @@ export default function AdminAppointments() {
                       </td>
                       <td>{a.doctor_name}</td>
                       <td className="text-muted">{a.date}</td>
-                      <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
+                      <td><span className="badge badge-info">{a.type || 'Normal'}</span></td>
                       <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                       <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
                     </motion.tr>

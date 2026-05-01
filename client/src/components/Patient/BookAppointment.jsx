@@ -21,7 +21,6 @@ const BOOKING_CRITERIA = [
   { icon: '🩺', title: 'Doctor Must Be Available', desc: 'Your selected doctor must be available and accepting appointments today.' },
   { icon: '📋', title: 'Clear Medical Reason', desc: 'You must provide a clear and valid reason for your visit.' },
   { icon: '🚫', title: 'No Duplicate Booking', desc: 'You cannot book more than one appointment with the same doctor on the same day.' },
-  { icon: '🚨', title: 'Emergency Verification', desc: 'Emergency appointments are subject to verification by the receptionist before being prioritized.' },
   { icon: '⏳', title: 'Pending Approval', desc: 'All appointments require receptionist approval before being confirmed. You will be notified of the decision.' },
 ];
 
@@ -86,9 +85,8 @@ export default function BookAppointment() {
       if (birth > today) errs.dob = 'Future date is not allowed';
     }
 
-    if (!reason) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
-    else if (!/^[A-Za-z\s]+$/.test(reason)) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
-    else if (reason.length < 5) errs.reason_for_visit = 'Only letters are allowed. Please enter a valid reason.';
+    if (!reason) errs.reason_for_visit = 'Reason for visit is required.';
+    else if (reason.length < 1) errs.reason_for_visit = 'Please enter a reason for your visit.';
 
     if (symptoms && /\\d/.test(symptoms)) errs.symptoms = 'Symptoms description cannot contain numbers.';
 
@@ -191,7 +189,7 @@ export default function BookAppointment() {
             <div className="bsc-detail-row"><span>🩺 Doctor</span><span className="fw-700">{result.doctorName}</span></div>
             <div className="bsc-detail-row"><span>🏥 Specialty</span><span className="fw-600">{result.specialization}</span></div>
             <div className="bsc-detail-row"><span>📋 Type</span>
-              <span className={`badge ${form.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{form.type}</span>
+              <span className="badge badge-info">{form.type}</span>
             </div>
             <div className="bsc-detail-row"><span>📅 Date</span>
               <span className="fw-600">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
@@ -449,7 +447,6 @@ export default function BookAppointment() {
                 <div className="type-selector">
                   {[
                     { val: 'Normal', icon: '📋', desc: 'Regular consultation' },
-                    { val: 'Emergency', icon: '🚨', desc: 'Urgent medical attention needed' },
                   ].map(t => (
                     <div key={t.val} className={`type-option ${form.type === t.val ? 'type-selected' : ''}`}
                       onClick={() => setF('type', t.val)}>

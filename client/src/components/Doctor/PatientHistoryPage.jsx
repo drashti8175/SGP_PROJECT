@@ -109,18 +109,8 @@ export default function PatientHistoryPage() {
                 <div className="stat-icon"><Clock size={18} /></div>
                 <div><p className="stat-label">Last Visit</p><h2 className="stat-value" style={{ fontSize: 14 }}>{history.appointments?.[0]?.date || 'N/A'}</h2></div>
               </div>
-              <div className="stat-card">
-                <div className="stat-icon"><AlertTriangle size={18} /></div>
-                <div><p className="stat-label">Emergency</p><h2 className="stat-value">{history.appointments?.filter(a => a.type === 'Emergency').length || 0}</h2></div>
-              </div>
             </div>
 
-            {/* Risk flags */}
-            {history.appointments?.some(a => a.type === 'Emergency') && (
-              <div className="risk-item risk-warning mt-3">
-                <AlertTriangle size={15} /> Emergency visit history — review carefully before prescribing
-              </div>
-            )}
             {history.prescriptions?.some(p => p.notes?.toLowerCase().includes('allerg')) && (
               <div className="risk-item risk-critical mt-2">
                 <AlertTriangle size={15} /> Possible allergy noted in previous prescriptions
@@ -150,12 +140,12 @@ export default function PatientHistoryPage() {
                   </thead>
                   <tbody>
                     {history.appointments.map((a, i) => (
-                      <tr key={i} className={a.type === 'Emergency' ? 'row-emergency' : ''}>
+                      <tr key={i}>
                         <td className="fw-600">{a.date}</td>
                         <td><span className="token-num">#{a.token_number}</span></td>
                         <td>{a.doctor_name}</td>
                         <td className="text-muted text-sm">{a.reason_for_visit}</td>
-                        <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
+                        <td><span className="badge badge-info">{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                       </tr>
                     ))}

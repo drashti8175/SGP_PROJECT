@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, Clock, Pill, CalendarPlus, Activity,
-  ChevronRight, QrCode, User, Bell, Stethoscope, CheckCircle2
+  ChevronRight, QrCode, User, Bell, Stethoscope, CheckCircle2, Trash2
 } from 'lucide-react';
 
 const statusBadge = (s) => {
@@ -31,6 +31,27 @@ export default function PatientDashboard() {
   const [queueInfo, setQueueInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date());
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    try {
+      await patientService.cancelAppointment(cancelTarget.id);
+      setCancelTarget(null);
+      fetchAll();
+      showToast('✅ Appointment cancelled successfully.');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to cancel.', 'error');
+    } finally { setCancelling(false); }
+  };
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
@@ -76,6 +97,51 @@ export default function PatientDashboard() {
 
   return (
     <div className="page">
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            style={{
+              position: 'fixed', top: 20, right: 20, zIndex: 2000,
+              background: toast.type === 'error' ? '#ef4444' : '#10b981',
+              color: 'white', padding: '12px 20px', borderRadius: 10,
+              fontWeight: 600, fontSize: 14, boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            }}>
+            {toast.msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Modal */}
+      <AnimatePresence>
+        {cancelTarget && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
+          }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              style={{ background: 'white', borderRadius: 16, padding: 28, maxWidth: 400, width: '100%' }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <Trash2 size={22} color="#ef4444" />
+                </div>
+                <h3 style={{ fontWeight: 700, fontSize: 17 }}>Cancel Appointment?</h3>
+                <p style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>This action cannot be undone.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setCancelTarget(null)} disabled={cancelling}
+                  style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1.5px solid #e2e8f0', background: 'white', fontWeight: 600, cursor: 'pointer' }}>
+                  Keep
+                </button>
+                <button onClick={handleCancel} disabled={cancelling}
+                  style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: cancelling ? '#fca5a5' : '#ef4444', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
+                  {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <div className="page-header">
         <div>
@@ -147,6 +213,12 @@ export default function PatientDashboard() {
             <button className="btn btn-sm btn-white" onClick={() => navigate('/patient/qr')}>
               <QrCode size={14} /> My QR
             </button>
+            {['pending','confirmed'].includes(upcoming[0]?.status) && (
+              <button className="btn btn-sm" onClick={() => setCancelTarget(upcoming[0])}
+                style={{ background: '#fee2e2', color: '#ef4444', border: '1.5px solid #fca5a5', fontWeight: 600 }}>
+                <Trash2 size={13} /> Cancel
+              </button>
+            )}
           </div>
         </motion.div>
       ) : (

@@ -5,6 +5,8 @@ import { authService } from './services/api';
 // Pages
 import LoginPage from './pages/LoginPage';
 import PatientHome from './pages/PatientHome';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import PatientLayout from './layouts/PatientLayout';
 import DoctorLayout from './layouts/DoctorLayout';
 import ReceptionistLayout from './layouts/ReceptionistLayout';
@@ -27,6 +29,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<PatientHome />} />
       <Route path="/login" element={user ? <Navigate to={`/${user.role}`} replace /> : <LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/patient/*" element={<ProtectedRoute allowedRoles={['patient']}><PatientLayout /></ProtectedRoute>} />
       <Route path="/doctor/*" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorLayout /></ProtectedRoute>} />
       <Route path="/receptionist/*" element={<ProtectedRoute allowedRoles={['receptionist']}><ReceptionistLayout /></ProtectedRoute>} />

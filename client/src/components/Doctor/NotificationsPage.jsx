@@ -3,7 +3,6 @@ import { doctorService, socket } from '../../services/api';
 import { Bell, RefreshCw, CheckCircle, AlertCircle, Clock, Calendar, XCircle, CheckCircle2 } from 'lucide-react';
 
 const ALERT_CONFIG = {
-  emergency: { icon: '🚨', color: '#dc2626', bg: '#fee2e2', label: 'Emergency' },
   noshow:    { icon: '🚫', color: '#f59e0b', bg: '#fef3c7', label: 'No-Show' },
   waiting:   { icon: '⏳', color: '#0891b2', bg: '#cffafe', label: 'Waiting' },
   completed: { icon: '✅', color: '#10b981', bg: '#d1fae5', label: 'Completed' },
@@ -104,7 +103,7 @@ export default function NotificationsPage() {
         <button className={`filter-tab ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>
           Unread ({unreadCount})
         </button>
-        {['emergency','followup','overdue','waiting','noshow'].map(t => (
+        {['followup','overdue','waiting','noshow'].map(t => (
           <button key={t} className={`filter-tab ${filter === t ? 'active' : ''}`} onClick={() => setFilter(t)}>
             {ALERT_CONFIG[t].icon} {ALERT_CONFIG[t].label}
           </button>

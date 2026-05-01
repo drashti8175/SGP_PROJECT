@@ -48,8 +48,11 @@ router.post('/book', async (req, res) => {
 
         const today = new Date().toISOString().split('T')[0];
 
-        const count = await Appointment.countDocuments({ doctor_id, date: today });
-        const token_number = count + 1;
+        // Always use max token + 1 so cancelled tokens are never reused
+        const lastAppt = await Appointment.findOne({ doctor_id, date: today })
+            .sort({ token_number: -1 })
+            .select('token_number');
+        const token_number = lastAppt ? lastAppt.token_number + 1 : 1;
 
         const appt = await Appointment.create({
             patient_id: req.userId,
@@ -210,6 +213,34 @@ router.get('/full-queue/:doctor_id', async (req, res) => {
         res.json(fullQueue);
     } catch (err) {
         res.status(500).json({ error: "Database error" });
+    }
+});
+
+// 6. Cancel Appointment
+router.post('/cancel/:id', async (req, res) => {
+    try {
+        const appt = await Appointment.findOne({ _id: req.params.id, patient_id: req.userId });
+        if (!appt) {
+            console.log(`❌ Cancel: appointment ${req.params.id} not found for user ${req.userId}`);
+            return res.status(404).json({ error: 'Appointment not found.' });
+        }
+
+        const cancellable = ['pending', 'confirmed', 'Waiting'];
+        if (!cancellable.includes(appt.status)) {
+            console.log(`❌ Cancel: status "${appt.status}" is not cancellable`);
+            return res.status(400).json({ error: `Cannot cancel an appointment that is "${appt.status}".` });
+        }
+
+        await Appointment.findByIdAndUpdate(req.params.id, { status: 'Cancelled' });
+
+        const io = req.app.get('io');
+        if (io) io.to('clinic_queue').emit('queue_updated', { message: 'Appointment cancelled' });
+
+        console.log(`✅ Cancel: appointment ${req.params.id} cancelled successfully`);
+        res.json({ success: true, message: 'Appointment cancelled successfully.' });
+    } catch (err) {
+        console.error('❌ Cancel Error:', err.message);
+        res.status(500).json({ error: 'Failed to cancel appointment: ' + err.message });
     }
 });
 

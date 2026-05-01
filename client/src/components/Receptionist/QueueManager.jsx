@@ -104,14 +104,6 @@ export default function QueueManager() {
         </div>
       </div>
 
-      {/* Emergency Alert */}
-      {appointments.some(a => a.type === 'Emergency' && ['pending','confirmed','Waiting'].includes(a.status)) && (
-        <div className="cdss-banner" style={{ background: '#fee2e2', borderColor: '#fca5a5' }}>
-          <AlertCircle size={16} style={{ color: '#dc2626' }} />
-          <strong style={{ color: '#dc2626' }}>🚨 Emergency patient in queue — handle immediately!</strong>
-        </div>
-      )}
-
       {/* Live Queue Summary */}
       {waitingQueue.length > 0 && (
         <div className="queue-live-summary">
@@ -168,7 +160,7 @@ export default function QueueManager() {
                     const qPos = waitingQueue.findIndex(w => w.id === a.id);
                     return (
                       <motion.tr key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className={`${a.type === 'Emergency' ? 'row-emergency' : ''} ${a.status === 'In-Consultation' ? 'row-active' : ''} ${a.status === 'pending' ? 'row-pending' : ''}`}>
+                        className={`${a.status === 'In-Consultation' ? 'row-active' : ''} ${a.status === 'pending' ? 'row-pending' : ''}`}>
                         <td><span className="token-num">#{a.token_number}</span></td>
                         <td>
                           <p className="fw-600">{a.patient_name}</p>
@@ -177,7 +169,7 @@ export default function QueueManager() {
                         </td>
                         <td className="fw-500">{a.doctor_name}</td>
                         <td className="text-muted text-sm" style={{ maxWidth: 140 }}>{a.reason_for_visit}</td>
-                        <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
+                        <td><span className="badge badge-info">{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${sb.cls}`}>{sb.label}</span></td>
                         <td className="text-muted text-sm">
                           {a.status === 'Waiting' && qPos >= 0 ? (

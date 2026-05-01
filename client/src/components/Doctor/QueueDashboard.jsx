@@ -87,7 +87,6 @@ export default function QueueDashboard() {
       <div className="stats-grid">
         <StatCard icon={<Users size={20} />} label="Total Today" value={stats.total_appointments} />
         <StatCard icon={<Clock size={20} />} label="Waiting" value={stats.patients_waiting} color="warning" />
-        <StatCard icon={<AlertCircle size={20} />} label="Emergency" value={stats.emergency_count} color="danger" />
         <StatCard icon={<TrendingUp size={20} />} label="Avg. Time" value={stats.avg_consult_time} color="success" />
       </div>
 
@@ -111,7 +110,7 @@ export default function QueueDashboard() {
                 {queue.map((p, i) => (
                   <motion.div key={p.id}
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                    className={`queue-patient-row ${p.status === 'In-Consultation' ? 'qpr-active' : ''} ${p.type === 'Emergency' ? 'qpr-emergency' : ''} ${selectedPatient?.id === p.id ? 'qpr-selected' : ''}`}
+                    className={`queue-patient-row ${p.status === 'In-Consultation' ? 'qpr-active' : ''} ${selectedPatient?.id === p.id ? 'qpr-selected' : ''}`}
                     onClick={() => setSelectedPatient(p)}>
                     <div className="qpr-pos">{i + 1}</div>
                     <div className="qpr-avatar">{p.patient_name?.charAt(0)}</div>
@@ -121,7 +120,6 @@ export default function QueueDashboard() {
                     </div>
                     <div className="qpr-badges">
                       <span className="token-num">#{p.token_number}</span>
-                      {p.type === 'Emergency' && <span className="badge badge-danger">🚨</span>}
                       <span className={`badge ${p.status === 'In-Consultation' ? 'badge-success' : 'badge-warning'}`}>
                         {p.status === 'In-Consultation' ? 'Active' : 'Waiting'}
                       </span>
@@ -156,7 +154,7 @@ export default function QueueDashboard() {
                     <h3 className="fw-800">{selectedPatient.patient_name}</h3>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                       <span className="token-num">Token #{selectedPatient.token_number}</span>
-                      <span className={`badge ${selectedPatient.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>
+                      <span className="badge badge-info">
                         {selectedPatient.type}
                       </span>
                       <span className={`badge ${selectedPatient.status === 'In-Consultation' ? 'badge-success' : 'badge-warning'}`}>

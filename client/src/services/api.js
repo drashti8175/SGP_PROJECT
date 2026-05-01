@@ -64,6 +64,7 @@ export const patientService = {
   getQueue: (doctor_id) => api.get(`/patient/queue/${doctor_id}`).then(r => r.data),
   getFullQueue: (doctor_id) => api.get(`/patient/full-queue/${doctor_id}`).then(r => r.data),
   getPrescriptions: () => api.get('/patient/prescriptions').then(r => r.data),
+  cancelAppointment: (id) => api.post(`/patient/cancel/${id}`).then(r => r.data),
 };
 
 export const receptionistService = {

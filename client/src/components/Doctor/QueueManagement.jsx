@@ -93,7 +93,6 @@ export default function QueueManagement() {
       <div className="stats-grid">
         <StatCard icon={<Users size={20} />} label="Total Today" value={stats.total_appointments} />
         <StatCard icon={<Clock size={20} />} label="Waiting" value={stats.patients_waiting} color="warning" />
-        <StatCard icon={<AlertCircle size={20} />} label="Emergency" value={stats.emergency_count} color="danger" />
         <StatCard icon={<Activity size={20} />} label="Avg. Time" value={stats.avg_consult_time} color="success" />
       </div>
 
@@ -116,7 +115,6 @@ export default function QueueManagement() {
                   <p className="text-muted text-sm">{activePatient.reason || 'General Checkup'}</p>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                     <span className="badge badge-success">Token #{activePatient.token_number}</span>
-                    {activePatient.type === 'Emergency' && <span className="badge badge-danger">URGENT</span>}
                   </div>
                 </div>
               </div>
@@ -168,7 +166,7 @@ export default function QueueManagement() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className={`queue-row ${p.type === 'Emergency' ? 'queue-row-emergency' : ''}`}>
+                  className={`queue-row`}>
                   <div className="qr-left">
                     <span className="qr-pos">{i + 1}</span>
                     <div className="patient-avatar">{p.patient_name?.charAt(0)}</div>
@@ -178,7 +176,6 @@ export default function QueueManagement() {
                     </div>
                   </div>
                   <div className="qr-right">
-                    {p.type === 'Emergency' && <span className="badge badge-danger">🚨 Urgent</span>}
                     <span className="badge badge-info">#{p.token_number}</span>
                     <button className="btn btn-xs btn-primary" title="Call"
                       onClick={() => callNext(p.id, p.patient_name)}>

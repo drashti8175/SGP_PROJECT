@@ -32,9 +32,12 @@ const userSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         default: ''
-    }
+    },
+    resetPasswordToken: { type: String, default: undefined },
+    resetPasswordExpires: { type: Date, default: undefined },
+    isActive: { type: Boolean, default: true }
 }, { 
-    timestamps: true // Automatically adds createdAt and updatedAt
+    timestamps: true
 });
 
 // Index for frequent queries

@@ -226,10 +226,10 @@ export default function WalkInBooking() {
             <div className="field-group">
               <label>Type</label>
               <div className="radio-group">
-                {['Normal', 'Emergency'].map(t => (
+                {['Normal'].map(t => (
                   <label key={t} className={`radio-option ${form.type === t ? 'selected' : ''}`}>
                     <input type="radio" value={t} checked={form.type === t} onChange={e => setF('type', e.target.value)} />
-                    {t === 'Emergency' ? '🚨 Emergency' : '📋 Normal'}
+                    📋 Normal
                   </label>
                 ))}
               </div>

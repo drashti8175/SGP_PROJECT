@@ -123,6 +123,16 @@ router.get('/users', async (req, res) => {
 router.post('/users/update-role', async (req, res) => {
     try {
         const { user_id, role } = req.body;
+        // Enforce single admin
+        if (role === 'admin') {
+            const existing = await User.countDocuments({ role: 'admin', _id: { $ne: user_id } });
+            if (existing >= 1) return res.status(400).json({ error: 'Only one admin account is allowed.' });
+        }
+        // Enforce single receptionist
+        if (role === 'receptionist') {
+            const existing = await User.countDocuments({ role: 'receptionist', _id: { $ne: user_id } });
+            if (existing >= 1) return res.status(400).json({ error: 'Only one receptionist account is allowed.' });
+        }
         await User.findByIdAndUpdate(user_id, { role });
         res.json({ message: 'Role updated' });
     } catch (err) { res.status(500).json({ error: 'Database error' }); }
@@ -131,8 +141,23 @@ router.post('/users/update-role', async (req, res) => {
 // 7. Delete user
 router.delete('/users/:id', async (req, res) => {
     try {
+        const user = await User.findById(req.params.id);
+        if (user?.role === 'admin') return res.status(403).json({ error: 'Cannot delete the admin account.' });
         await User.findByIdAndDelete(req.params.id);
         res.json({ message: 'User deleted' });
+    } catch (err) { res.status(500).json({ error: 'Database error' }); }
+});
+
+// 7b. Suspend / unsuspend user
+router.post('/users/toggle-active', async (req, res) => {
+    try {
+        const { user_id } = req.body;
+        const user = await User.findById(user_id);
+        if (!user) return res.status(404).json({ error: 'User not found.' });
+        if (user.role === 'admin') return res.status(403).json({ error: 'Cannot suspend the admin account.' });
+        user.isActive = !user.isActive;
+        await user.save();
+        res.json({ message: `Account ${user.isActive ? 'activated' : 'suspended'}.`, isActive: user.isActive });
     } catch (err) { res.status(500).json({ error: 'Database error' }); }
 });
 

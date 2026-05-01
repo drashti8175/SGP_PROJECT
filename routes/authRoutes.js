@@ -9,29 +9,30 @@ const { JWT_SECRET, verifyToken } = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 
-// Patient Registration
+// Patient Registration only — admin/doctor/receptionist cannot self-register
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) return res.status(400).json({ error: "Missing required fields." });
 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ error: "Email already exists." });
+        const emailLower = email.toLowerCase().trim();
+        if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(emailLower))
+            return res.status(400).json({ error: "Only Gmail addresses are allowed." });
 
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const role = 'patient';
+        const existingUser = await User.findOne({ email: emailLower });
+        if (existingUser) return res.status(400).json({ error: "Email already registered." });
 
         const user = await User.create({
             name,
-            email,
-            password: hashedPassword,
-            role
+            email: emailLower,
+            password: bcrypt.hashSync(password, 10),
+            role: 'patient'
         });
 
-        console.log(`✅ [DEBUG] New User Saved: ${user.email} (Role: ${user.role})`);
+        console.log(`✅ New patient registered: ${user.email}`);
         res.json({ message: "Registration successful!", userId: user._id });
     } catch (err) {
-        console.error("❌ [DEBUG] Registration Error:", err.message);
+        console.error("❌ Registration Error:", err.message);
         res.status(500).json({ error: "Database error." });
     }
 });
@@ -40,50 +41,42 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(`🔍 [DEBUG] Login Query for Email: ${email}`);
-        
         if (!email || !password) return res.status(400).json({ error: "Missing email or password." });
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            console.log(`⚠️ [DEBUG] User not found for email: ${email}`);
-            return res.status(404).json({ error: "User not found." });
-        }
+        const emailLower = email.toLowerCase().trim();
 
-        console.log(`👤 [DEBUG] Fetched User:`, { id: user._id, email: user.email, role: user.role });
+        // Gmail-only enforcement
+        if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(emailLower))
+            return res.status(400).json({ error: "Only Gmail addresses are allowed." });
+
+        const user = await User.findOne({ email: emailLower });
+        if (!user) return res.status(404).json({ error: "No account found with this email." });
+
+        // Block if account is inactive/suspended
+        if (user.isActive === false)
+            return res.status(403).json({ error: "Your account has been suspended. Contact admin." });
 
         const isValid = bcrypt.compareSync(password, user.password);
-        if (!isValid) {
-            console.log(`❌ [DEBUG] Invalid password attempt for: ${email}`);
-            return res.status(401).json({ error: "Invalid credentials." });
+        if (!isValid) return res.status(401).json({ error: "Incorrect password." });
+
+        // Enforce single admin — only the seeded admin account can login as admin
+        if (user.role === 'admin') {
+            const adminCount = await User.countDocuments({ role: 'admin', isActive: { $ne: false } });
+            if (adminCount > 1)
+                return res.status(403).json({ error: "Multiple admin accounts detected. Contact system administrator." });
         }
 
         const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
-        
-        // If doctor, also return doctor_id
+
         if (user.role === 'doctor') {
             const doc = await Doctor.findOne({ userId: user._id });
-            return res.json({ 
-                success: true,
-                message: "Login successful", 
-                token, 
-                role: user.role, 
-                name: user.name, 
-                doctor_id: doc ? doc._id : null,
-                patientId: user._id // Shared ID for simplicity
-            });
-        } else {
-            res.json({ 
-                success: true,
-                message: "Login successful", 
-                token, 
-                role: user.role, 
-                name: user.name,
-                patientId: user._id 
-            });
+            if (!doc) return res.status(403).json({ error: "Doctor profile not found. Contact admin." });
+            return res.json({ success: true, message: "Login successful", token, role: user.role, name: user.name, doctor_id: doc._id, patientId: user._id });
         }
+
+        res.json({ success: true, message: "Login successful", token, role: user.role, name: user.name, patientId: user._id });
     } catch (err) {
-        console.error("❌ [DEBUG] Login Error:", err.message);
+        console.error("❌ Login Error:", err.message);
         res.status(500).json({ error: "Database error." });
     }
 });
@@ -143,20 +136,21 @@ router.post('/reset-password-direct', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
+        if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters." });
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
         if (!user) {
-            return res.status(404).json({ error: "Email not found." });
+            console.log(`❌ [RESET] No user found for email: ${email}`);
+            return res.status(404).json({ error: "No account found with that email address." });
         }
 
         user.password = bcrypt.hashSync(password, 10);
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
         await user.save();
+        console.log(`✅ [RESET] Password updated for: ${email}`);
         res.json({ message: "Password updated successfully!" });
     } catch (err) {
-        console.error("❌ [DEBUG] Direct Reset Error:", err.message);
-        res.status(500).json({ error: "Failed to reset password." });
+        console.error("❌ [RESET] Error:", err.message);
+        res.status(500).json({ error: "Failed to reset password: " + err.message });
     }
 });
 

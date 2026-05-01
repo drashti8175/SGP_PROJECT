@@ -124,16 +124,10 @@ export default function PatientSearch() {
               </div>
               <div className="stat-card">
                 <div className="stat-icon"><AlertTriangle size={18} /></div>
-                <div><p className="stat-label">Emergency</p><h2 className="stat-value">{history.appointments?.filter(a => a.type === 'Emergency').length || 0}</h2></div>
+                <div><p className="stat-label">Total Visits</p><h2 className="stat-value">{history.appointments?.length || 0}</h2></div>
               </div>
             </div>
 
-            {/* Emergency flag */}
-            {history.appointments?.some(a => a.type === 'Emergency') && (
-              <div className="risk-item risk-warning mt-3">
-                <AlertTriangle size={15} /> This patient has emergency visit history — handle with care
-              </div>
-            )}
           </div>
 
           {/* Tabs */}
@@ -159,12 +153,12 @@ export default function PatientSearch() {
                   </thead>
                   <tbody>
                     {history.appointments.map((a, i) => (
-                      <tr key={i} className={a.type === 'Emergency' ? 'row-emergency' : ''}>
+                      <tr key={i}>
                         <td className="fw-600">{a.date}</td>
                         <td><span className="token-num">#{a.token_number}</span></td>
                         <td>{a.doctor_name}</td>
                         <td className="text-muted text-sm" style={{ maxWidth: 180 }}>{a.reason_for_visit}</td>
-                        <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
+                        <td><span className="badge badge-info">{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${statusBadge(a.status)}`}>{a.status}</span></td>
                       </tr>
                     ))}

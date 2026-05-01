@@ -16,7 +16,6 @@ const APPROVAL_CRITERIA = [
   { id: 3, title: 'Appointment Slot Available', desc: 'The requested slot must not exceed the maximum token limit per session.' },
   { id: 4, title: 'Valid Medical Reason', desc: 'A clear and valid reason for visit must be provided by the patient.' },
   { id: 5, title: 'No Duplicate Booking', desc: 'Patient must not have an existing active appointment with the same doctor on the same date.' },
-  { id: 6, title: 'Emergency Verification', desc: 'Emergency appointments must be verified for urgency before being prioritized.' },
 ];
 
 const REJECTION_REASONS = [
@@ -26,7 +25,6 @@ const REJECTION_REASONS = [
   'Invalid or incomplete patient information provided',
   'Appointment request outside clinic working hours',
   'Patient has outstanding dues — payment required first',
-  'Emergency claim not verified by medical staff',
   'Other (specify below)',
 ];
 
@@ -173,7 +171,6 @@ export default function ReceptionistDashboard() {
         <StatCard icon={<Activity size={20} />}     label="In Consultation"  value={data?.in_consultation || 0} color="success" />
         <StatCard icon={<CheckCircle2 size={20} />} label="Completed"        value={data?.completed || 0}       color="primary" />
         <StatCard icon={<XCircle size={20} />}      label="Rejected"         value={data?.no_show || 0}         color="danger" />
-        <StatCard icon={<AlertCircle size={20} />}  label="Emergency"        value={data?.emergency || 0}       color="danger" />
       </div>
 
       {/* Quick Nav */}
@@ -270,7 +267,7 @@ export default function ReceptionistDashboard() {
                     const sb = statusBadge(a.status);
                     return (
                       <motion.tr key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className={`${a.type === 'Emergency' ? 'row-emergency' : ''} ${a.status === 'pending' ? 'row-pending' : ''}`}>
+                        className={`${a.status === 'pending' ? 'row-pending' : ''}`}>
                         <td><span className="token-num">#{a.token_number}</span></td>
                         <td>
                           <div className="patient-cell">
@@ -288,7 +285,7 @@ export default function ReceptionistDashboard() {
                         </td>
                         <td className="fw-500">{a.doctor_name}</td>
                         <td className="text-muted text-sm" style={{ maxWidth: 160 }}>{a.reason_for_visit}</td>
-                        <td><span className={`badge ${a.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`}>{a.type || 'Normal'}</span></td>
+                        <td><span className="badge badge-info">{a.type || 'Normal'}</span></td>
                         <td><span className={`badge ${sb.cls}`}>{sb.label}</span></td>
                         <td><span className={`badge ${a.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{a.payment_status || 'pending'}</span></td>
                         <td>

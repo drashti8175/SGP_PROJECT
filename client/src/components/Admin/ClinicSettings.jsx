@@ -109,7 +109,6 @@ export default function ClinicSettings() {
             <h3 className="card-title mb-4"><Shield size={18} /> System Preferences</h3>
             <div className="form-stack">
               {[
-                { key: 'emergencyProtocol', label: 'Emergency Priority Protocol', desc: 'Emergency patients get top queue priority' },
                 { key: 'autoApprove', label: 'Auto-Approve Appointments', desc: 'Automatically confirm new bookings' },
                 { key: 'notifyPatients', label: 'Patient Notifications', desc: 'Send queue updates to patients' },
                 { key: 'qrEnabled', label: 'QR Code Check-In', desc: 'Enable QR scanning at reception' },

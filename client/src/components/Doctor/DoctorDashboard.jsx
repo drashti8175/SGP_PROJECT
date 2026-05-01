@@ -99,9 +99,6 @@ export default function DoctorDashboard() {
           </p>
         </div>
         <div className="header-actions">
-          <button className="btn btn-danger" onClick={() => navigate('/doctor/queue')}>
-            <AlertCircle size={16} /> Emergency
-          </button>
           <button className="btn btn-primary" onClick={() => navigate('/doctor/queue')}>
             <PhoneCall size={16} /> Queue
           </button>
@@ -120,7 +117,6 @@ export default function DoctorDashboard() {
       <div className="stats-grid">
         <StatCard icon={<Users size={20} />} label="Total Today" value={stats.total_appointments} />
         <StatCard icon={<Clock size={20} />} label="Waiting" value={stats.patients_waiting} color="warning" />
-        <StatCard icon={<AlertCircle size={20} />} label="Emergency" value={stats.emergency_count} color="danger" />
         <StatCard icon={<TrendingUp size={20} />} label="Avg. Consult" value={stats.avg_consult_time} color="success" />
       </div>
 
@@ -161,7 +157,6 @@ export default function DoctorDashboard() {
               <h4 className="fw-700 mt-2">{nextPatient.patient_name}</h4>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <span className="badge badge-warning">Token #{nextPatient.token_number}</span>
-                {nextPatient.type === 'Emergency' && <span className="badge badge-danger">URGENT</span>}
               </div>
               <p className="text-muted text-sm mt-2">{nextPatient.reason || 'General Checkup'}</p>
               <p className="smart-wait mt-2"><Clock size={12} /> Est. wait: {smartWait(0)}</p>
@@ -184,7 +179,6 @@ export default function DoctorDashboard() {
                   <span className="qm-token">#{p.token_number}</span>
                   <span className="qm-name">{p.patient_name}</span>
                   <span className="text-muted text-xs">{smartWait(i)}</span>
-                  <span className={`badge ${p.type === 'Emergency' ? 'badge-danger' : 'badge-info'}`} style={{ fontSize: 10 }}>{p.type}</span>
                 </div>
               ))}
               {queue.length === 0 && <p className="text-muted text-sm" style={{ textAlign: 'center', padding: '8px 0' }}>Queue is empty</p>}

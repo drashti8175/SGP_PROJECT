@@ -18,25 +18,27 @@ const seedDatabase = async () => {
         const hash = bcrypt.hashSync('1234', 10);
 
         const accounts = [
-            { email: 'admin@clinic.com',      name: 'Admin',            role: 'admin' },
-            { email: 'reception@clinic.com',  name: 'Receptionist',     role: 'receptionist' },
-            { email: 'sushma@clinic.com',     name: 'Dr. Sushma Patel', role: 'doctor' },
-            { email: 'hemant@clinic.com',     name: 'Dr. Hemant Shah',  role: 'doctor' },
-            { email: 'sachet@gmail.com',      name: 'Sachet Kumar',     role: 'patient' },
-            { email: 'john@example.com',      name: 'John Doe',         role: 'patient' },
+            { email: 'admin@gmail.com',        name: 'Admin',            role: 'admin' },
+            { email: 'reception@gmail.com',    name: 'Receptionist',     role: 'receptionist' },
+            { email: 'sushmapatel@gmail.com', name: 'Dr. Sushma Patel', role: 'doctor' },
+            { email: 'hemantt@gmail.com',      name: 'Dr. Hemant Shah',  role: 'doctor' },
+            { email: 'sachet@gmail.com',       name: 'Sachet Kumar',     role: 'patient' },
+            { email: 'john.doe@gmail.com',     name: 'John Doe',         role: 'patient' },
         ];
 
         console.log('🌱 Seeding core users and doctor profiles...');
         for (const acc of accounts) {
             const exists = await User.findOne({ email: acc.email });
-            if (!exists) {
-                const user = await User.create({ name: acc.name, email: acc.email, password: hash, role: acc.role });
-                if (acc.role === 'doctor') {
-                    const spec = acc.email.includes('sushma') ? 'Cardiologist' : 'General Physician';
-                    const fee  = acc.email.includes('sushma') ? 500 : 300;
+            const user = exists || await User.create({ name: acc.name, email: acc.email, password: hash, role: acc.role });
+            if (!exists) console.log(`✅ Created: ${acc.email}`);
+            if (acc.role === 'doctor') {
+                const spec = acc.email.includes('sushma') ? 'Cardiologist' : 'General Physician';  
+                const fee  = acc.email.includes('sushma') ? 500 : 300;
+                const docExists = await Doctor.findOne({ userId: user._id });
+                if (!docExists) {
                     await Doctor.create({ userId: user._id, specialization: spec, consultationFee: fee, experience: 10 });
+                    console.log(`✅ Doctor profile created for: ${acc.email}`);
                 }
-                console.log(`✅ Created: ${acc.email}`);
             }
         }
 
