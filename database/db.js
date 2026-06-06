@@ -18,19 +18,24 @@ const seedDatabase = async () => {
         const hash = bcrypt.hashSync('1234', 10);
 
         const accounts = [
-            { email: 'admin@gmail.com',        name: 'Admin',            role: 'admin' },
-            { email: 'reception@gmail.com',    name: 'Receptionist',     role: 'receptionist' },
-            { email: 'sushmapatel@gmail.com', name: 'Dr. Sushma Patel', role: 'doctor' },
-            { email: 'hemantt@gmail.com',      name: 'Dr. Hemant Shah',  role: 'doctor' },
-            { email: 'sachet@gmail.com',       name: 'Sachet Kumar',     role: 'patient' },
-            { email: 'john.doe@gmail.com',     name: 'John Doe',         role: 'patient' },
+            { email: 'admin@gmail.com',       username: 'admin',       name: 'Admin',            role: 'admin',         password: bcrypt.hashSync('Admin@123', 10) },
+            { email: 'reception@gmail.com',   username: 'receptionist', name: 'Receptionist',    role: 'receptionist',  password: bcrypt.hashSync('Recep@123', 10) },
+            { email: 'sushmapatel@gmail.com', username: 'drsushma',    name: 'Dr. Sushma Patel', role: 'doctor',        password: bcrypt.hashSync('Doctor@123', 10) },
+            { email: 'hemantt@gmail.com',     username: 'drhemant',    name: 'Dr. Hemant Shah',  role: 'doctor',        password: bcrypt.hashSync('Doctor@123', 10) },
+            { email: 'sachet@gmail.com',      username: 'sachet',      name: 'Sachet Kumar',     role: 'patient',       password: bcrypt.hashSync('Patient@123', 10) },
+            { email: 'john.doe@gmail.com',    username: 'johndoe',     name: 'John Doe',         role: 'patient',       password: bcrypt.hashSync('Patient@123', 10) },
         ];
 
         console.log('🌱 Seeding core users and doctor profiles...');
         for (const acc of accounts) {
-            const exists = await User.findOne({ email: acc.email });
-            const user = exists || await User.create({ name: acc.name, email: acc.email, password: hash, role: acc.role });
-            if (!exists) console.log(`✅ Created: ${acc.email}`);
+            const exists = await User.findOne({ $or: [{ email: acc.email }, { username: acc.username }] });
+            const user = exists || await User.create({ name: acc.name, email: acc.email, username: acc.username, password: acc.password, role: acc.role });
+            if (!exists) console.log(`✅ Created: ${acc.username} (${acc.role})`);
+            // Update username if missing on existing user
+            if (exists && !exists.username) {
+                await User.findByIdAndUpdate(exists._id, { username: acc.username, password: acc.password });
+                console.log(`✅ Updated username for: ${acc.email}`);
+            }
             if (acc.role === 'doctor') {
                 const spec = acc.email.includes('sushma') ? 'Cardiologist' : 'General Physician';  
                 const fee  = acc.email.includes('sushma') ? 500 : 300;

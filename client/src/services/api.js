@@ -15,8 +15,23 @@ export const socket = io('http://localhost:3000', {
 });
 
 export const authService = {
+  loginWithUsername: async (username, password) => {
+    const { data } = await api.post('/auth/login-username', { username, password });
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data));
+    }
+    return data;
+  },
+  registerWithUsername: async (username, password) => {
+    const { data } = await api.post('/auth/register-username', { username, password });
+    return data;
+  },
+  resetPasswordByUsername: async (username, password) => {
+    const { data } = await api.post('/auth/reset-password-username', { username, password });
+    return data;
+  },
   login: async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
@@ -41,6 +56,14 @@ export const authService = {
   },
   resetPasswordDirect: async (email, password) => {
     const { data } = await api.post('/auth/reset-password-direct', { email, password });
+    return data;
+  },
+  sendOtp: async (email) => {
+    const { data } = await api.post('/auth/send-otp', { email });
+    return data;
+  },
+  verifyOtp: async (email, otp) => {
+    const { data } = await api.post('/auth/verify-otp', { email, otp });
     return data;
   },
 };

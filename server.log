@@ -1,0 +1,15 @@
+[dotenv@17.3.1] injecting env (3) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+📡 Connecting to MongoDB Atlas...
+🚀 Server running on http://localhost:3000
+✅ MongoDB Connected
+🌱 Seeding core users and doctor profiles...
+✅ Updated username for: admin@gmail.com
+✅ Updated username for: reception@gmail.com
+✅ Updated username for: sushmapatel@gmail.com
+✅ Updated username for: hemantt@gmail.com
+✅ Updated username for: sachet@gmail.com
+✅ Updated username for: john.doe@gmail.com
+✅ Database Structure Verified — 18 users present.
+✅ New patient registered: ruhipatel
+(node:23124) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
